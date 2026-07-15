@@ -1,0 +1,121 @@
+{
+  "statustag": {
+    "settings": {
+      "name": "StatusTag",
+      "enabled": {
+        "name": "مفعّل"
+      },
+      "tabList": {
+        "name": "قائمة Tab",
+        "description": "يعرض نقطة حالة بجانب أسماء اللاعبين في قائمة Tab.",
+        "enabled": {
+          "name": "مفعّل"
+        },
+        "dotSize": {
+          "name": "حجم النقطة"
+        },
+        "badgeWidth": {
+          "name": "عرض الشارة",
+          "description": "المساحة المحجوزة للنقطة قبل اسم اللاعب."
+        },
+        "dotOffset": {
+          "name": "موضع النقطة",
+          "description": "يحرّك النقطة يمينًا أو يسارًا."
+        }
+      },
+      "nameTag": {
+        "name": "لافتات الأسماء",
+        "description": "يعرض نقطة حالة بجانب الاسم فوق رؤوس اللاعبين.",
+        "enabled": {
+          "name": "مفعّل"
+        }
+      },
+      "chat": {
+        "name": "الدردشة",
+        "description": "يعرض نقطة حالة قبل رسائل الدردشة.",
+        "enabled": {
+          "name": "مفعّل"
+        }
+      },
+      "notifications": {
+        "name": "الإشعارات",
+        "description": "احصل على إشعار عندما تتغير حالة صديقك.",
+        "enabled": {
+          "name": "مفعّل"
+        },
+        "friendOnline": {
+          "name": "صديق يصبح متصلًا"
+        },
+        "friendOffline": {
+          "name": "صديق يصبح غير متصل"
+        },
+        "statusChange": {
+          "name": "صديق يصبح بعيدًا أو مشغولًا"
+        }
+      },
+      "header": {
+        "sources": {
+          "name": "مصادر الحالة"
+        },
+        "advanced": {
+          "name": "متقدّم"
+        }
+      },
+      "useLabyChat": {
+        "name": "أصدقاء LabyChat",
+        "description": "يعرض الحالة المباشرة لأصدقائك في LabyChat."
+      },
+      "useLabyNetApi": {
+        "name": "laby.net",
+        "description": "يجلب حالات اللاعبين من laby.net."
+      },
+      "useMesh": {
+        "name": "مزامنة StatusTag",
+        "description": "يتبادل الحالات مع اللاعبين الآخرين الذين يستخدمون هذه الإضافة."
+      },
+      "statusColors": {
+        "name": "ألوان الحالات",
+        "description": "غيّر لون كل حالة.",
+        "onlineColor": {
+          "name": "متصل"
+        },
+        "awayColor": {
+          "name": "بعيد"
+        },
+        "busyColor": {
+          "name": "مشغول"
+        },
+        "offlineColor": {
+          "name": "غير متصل"
+        },
+        "invisibleColor": {
+          "name": "مخفي"
+        },
+        "profileHiddenColor": {
+          "name": "ملف شخصي مخفي"
+        },
+        "noLabyModColor": {
+          "name": "بدون LabyMod"
+        },
+        "unknownColor": {
+          "name": "غير معروف"
+        }
+      },
+      "debugLogging": {
+        "name": "سجل التتبّع",
+        "description": "يكتب ملف سجل لاستكشاف الأخطاء. اتركه معطّلًا إن لم تكن بحاجته."
+      },
+      "clearCache": {
+        "name": "مسح الذاكرة المؤقتة",
+        "description": "يحذف كل الحالات المحفوظة ليُعاد جلبها من جديد.",
+        "text": "مسح"
+      }
+    },
+    "notify": {
+      "online": "أصبح الآن متصلًا",
+      "away": "أصبح الآن بعيدًا",
+      "busy": "أصبح الآن مشغولًا",
+      "offline": "أصبح غير متصل"
+    }
+  }
+}

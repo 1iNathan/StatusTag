@@ -1,0 +1,121 @@
+{
+  "statustag": {
+    "settings": {
+      "name": "StatusTag",
+      "enabled": {
+        "name": "Включено"
+      },
+      "tabList": {
+        "name": "Список игроков",
+        "description": "Показывает точку статуса рядом с именами в списке игроков.",
+        "enabled": {
+          "name": "Включено"
+        },
+        "dotSize": {
+          "name": "Размер точки"
+        },
+        "badgeWidth": {
+          "name": "Ширина значка",
+          "description": "Место, отведённое для точки перед именем игрока."
+        },
+        "dotOffset": {
+          "name": "Положение точки",
+          "description": "Сдвигает точку влево или вправо."
+        }
+      },
+      "nameTag": {
+        "name": "Никнеймы",
+        "description": "Показывает точку статуса рядом с именем над головой игрока.",
+        "enabled": {
+          "name": "Включено"
+        }
+      },
+      "chat": {
+        "name": "Чат",
+        "description": "Показывает точку статуса перед сообщениями в чате.",
+        "enabled": {
+          "name": "Включено"
+        }
+      },
+      "notifications": {
+        "name": "Уведомления",
+        "description": "Получай уведомление, когда статус друга меняется.",
+        "enabled": {
+          "name": "Включено"
+        },
+        "friendOnline": {
+          "name": "Друг заходит в сеть"
+        },
+        "friendOffline": {
+          "name": "Друг выходит из сети"
+        },
+        "statusChange": {
+          "name": "Друг отошёл или занят"
+        }
+      },
+      "header": {
+        "sources": {
+          "name": "Источники статуса"
+        },
+        "advanced": {
+          "name": "Дополнительно"
+        }
+      },
+      "useLabyChat": {
+        "name": "Друзья LabyChat",
+        "description": "Показывает статус твоих друзей в LabyChat в реальном времени."
+      },
+      "useLabyNetApi": {
+        "name": "laby.net",
+        "description": "Запрашивает статусы игроков на laby.net."
+      },
+      "useMesh": {
+        "name": "StatusTag Sync",
+        "description": "Обменивается статусами с другими игроками, использующими этот аддон."
+      },
+      "statusColors": {
+        "name": "Цвета статусов",
+        "description": "Измени цвет каждого статуса.",
+        "onlineColor": {
+          "name": "В сети"
+        },
+        "awayColor": {
+          "name": "Отошёл"
+        },
+        "busyColor": {
+          "name": "Занят"
+        },
+        "offlineColor": {
+          "name": "Не в сети"
+        },
+        "invisibleColor": {
+          "name": "Невидимый"
+        },
+        "profileHiddenColor": {
+          "name": "Скрытый профиль"
+        },
+        "noLabyModColor": {
+          "name": "Без LabyMod"
+        },
+        "unknownColor": {
+          "name": "Неизвестно"
+        }
+      },
+      "debugLogging": {
+        "name": "Журнал отладки",
+        "description": "Записывает файл журнала для поиска ошибок. Оставь выключенным, если он не нужен."
+      },
+      "clearCache": {
+        "name": "Очистить кэш",
+        "description": "Удаляет все сохранённые статусы, чтобы запросить их заново.",
+        "text": "Очистить"
+      }
+    },
+    "notify": {
+      "online": "теперь в сети",
+      "away": "теперь отошёл",
+      "busy": "теперь занят",
+      "offline": "вышел из сети"
+    }
+  }
+}

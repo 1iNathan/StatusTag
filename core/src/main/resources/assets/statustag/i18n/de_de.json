@@ -1,0 +1,121 @@
+{
+  "statustag": {
+    "settings": {
+      "name": "StatusTag",
+      "enabled": {
+        "name": "Aktiviert"
+      },
+      "tabList": {
+        "name": "Tab-Liste",
+        "description": "Zeigt einen Status-Punkt neben den Spielernamen in der Tab-Liste an.",
+        "enabled": {
+          "name": "Aktiviert"
+        },
+        "dotSize": {
+          "name": "Punktgröße"
+        },
+        "badgeWidth": {
+          "name": "Badge-Breite",
+          "description": "Der reservierte Platz für den Punkt vor dem Spielernamen."
+        },
+        "dotOffset": {
+          "name": "Punkt-Position",
+          "description": "Verschiebt den Punkt nach links oder rechts."
+        }
+      },
+      "nameTag": {
+        "name": "Namensschilder",
+        "description": "Zeigt einen Status-Punkt neben dem Namen über den Köpfen der Spieler an.",
+        "enabled": {
+          "name": "Aktiviert"
+        }
+      },
+      "chat": {
+        "name": "Chat",
+        "description": "Zeigt einen Status-Punkt vor Chat-Nachrichten an.",
+        "enabled": {
+          "name": "Aktiviert"
+        }
+      },
+      "notifications": {
+        "name": "Benachrichtigungen",
+        "description": "Werde benachrichtigt, wenn sich der Status eines Freundes ändert.",
+        "enabled": {
+          "name": "Aktiviert"
+        },
+        "friendOnline": {
+          "name": "Freund kommt online"
+        },
+        "friendOffline": {
+          "name": "Freund geht offline"
+        },
+        "statusChange": {
+          "name": "Freund wird abwesend oder beschäftigt"
+        }
+      },
+      "header": {
+        "sources": {
+          "name": "Status-Quellen"
+        },
+        "advanced": {
+          "name": "Erweitert"
+        }
+      },
+      "useLabyChat": {
+        "name": "LabyChat-Freunde",
+        "description": "Zeigt den Live-Status deiner LabyChat-Freunde an."
+      },
+      "useLabyNetApi": {
+        "name": "laby.net",
+        "description": "Ruft den Spielerstatus über laby.net ab."
+      },
+      "useMesh": {
+        "name": "StatusTag Sync",
+        "description": "Tauscht Status mit anderen Spielern aus, die dieses Addon nutzen."
+      },
+      "statusColors": {
+        "name": "Status-Farben",
+        "description": "Ändere die Farbe jedes Status.",
+        "onlineColor": {
+          "name": "Online"
+        },
+        "awayColor": {
+          "name": "Abwesend"
+        },
+        "busyColor": {
+          "name": "Beschäftigt"
+        },
+        "offlineColor": {
+          "name": "Offline"
+        },
+        "invisibleColor": {
+          "name": "Unsichtbar"
+        },
+        "profileHiddenColor": {
+          "name": "Verborgenes Profil"
+        },
+        "noLabyModColor": {
+          "name": "Kein LabyMod"
+        },
+        "unknownColor": {
+          "name": "Unbekannt"
+        }
+      },
+      "debugLogging": {
+        "name": "Debug-Protokoll",
+        "description": "Schreibt eine Log-Datei zur Fehlersuche. Lass diese Option deaktiviert, wenn du sie nicht brauchst."
+      },
+      "clearCache": {
+        "name": "Cache leeren",
+        "description": "Entfernt alle gespeicherten Status, damit sie neu abgerufen werden.",
+        "text": "Leeren"
+      }
+    },
+    "notify": {
+      "online": "ist jetzt online",
+      "away": "ist jetzt abwesend",
+      "busy": "ist jetzt beschäftigt",
+      "offline": "ist offline gegangen"
+    }
+  }
+}

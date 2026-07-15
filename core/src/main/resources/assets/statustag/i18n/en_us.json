@@ -1,0 +1,121 @@
+{
+  "statustag": {
+    "settings": {
+      "name": "StatusTag",
+      "enabled": {
+        "name": "Enabled"
+      },
+      "tabList": {
+        "name": "Tab List",
+        "description": "Shows a status dot next to player names in the tab list.",
+        "enabled": {
+          "name": "Enabled"
+        },
+        "dotSize": {
+          "name": "Dot Size"
+        },
+        "badgeWidth": {
+          "name": "Badge Width",
+          "description": "The space reserved for the dot in front of the player name."
+        },
+        "dotOffset": {
+          "name": "Dot Position",
+          "description": "Moves the dot to the left or right."
+        }
+      },
+      "nameTag": {
+        "name": "Name Tags",
+        "description": "Shows a status dot next to the name above players' heads.",
+        "enabled": {
+          "name": "Enabled"
+        }
+      },
+      "chat": {
+        "name": "Chat",
+        "description": "Shows a status dot in front of chat messages.",
+        "enabled": {
+          "name": "Enabled"
+        }
+      },
+      "notifications": {
+        "name": "Notifications",
+        "description": "Get notified when a friend's status changes.",
+        "enabled": {
+          "name": "Enabled"
+        },
+        "friendOnline": {
+          "name": "Friend Comes Online"
+        },
+        "friendOffline": {
+          "name": "Friend Goes Offline"
+        },
+        "statusChange": {
+          "name": "Friend Becomes Away or Busy"
+        }
+      },
+      "header": {
+        "sources": {
+          "name": "Status Sources"
+        },
+        "advanced": {
+          "name": "Advanced"
+        }
+      },
+      "useLabyChat": {
+        "name": "LabyChat Friends",
+        "description": "Shows the live status of your LabyChat friends."
+      },
+      "useLabyNetApi": {
+        "name": "laby.net",
+        "description": "Looks up player statuses on laby.net."
+      },
+      "useMesh": {
+        "name": "StatusTag Sync",
+        "description": "Exchanges statuses with other players who use this addon."
+      },
+      "statusColors": {
+        "name": "Status Colors",
+        "description": "Change the color of every status.",
+        "onlineColor": {
+          "name": "Online"
+        },
+        "awayColor": {
+          "name": "Away"
+        },
+        "busyColor": {
+          "name": "Busy"
+        },
+        "offlineColor": {
+          "name": "Offline"
+        },
+        "invisibleColor": {
+          "name": "Invisible"
+        },
+        "profileHiddenColor": {
+          "name": "Hidden Profile"
+        },
+        "noLabyModColor": {
+          "name": "No LabyMod"
+        },
+        "unknownColor": {
+          "name": "Unknown"
+        }
+      },
+      "debugLogging": {
+        "name": "Debug Logging",
+        "description": "Writes a log file for troubleshooting. Keep this disabled unless you need it."
+      },
+      "clearCache": {
+        "name": "Clear Cache",
+        "description": "Removes all saved statuses so they get looked up again.",
+        "text": "Clear"
+      }
+    },
+    "notify": {
+      "online": "is now online",
+      "away": "is now away",
+      "busy": "is now busy",
+      "offline": "went offline"
+    }
+  }
+}

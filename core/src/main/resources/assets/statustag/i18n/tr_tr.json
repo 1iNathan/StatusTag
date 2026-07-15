@@ -1,0 +1,121 @@
+{
+  "statustag": {
+    "settings": {
+      "name": "StatusTag",
+      "enabled": {
+        "name": "Etkin"
+      },
+      "tabList": {
+        "name": "Oyuncu Listesi",
+        "description": "Oyuncu listesindeki isimlerin yanında bir durum noktası gösterir.",
+        "enabled": {
+          "name": "Etkin"
+        },
+        "dotSize": {
+          "name": "Nokta Boyutu"
+        },
+        "badgeWidth": {
+          "name": "Rozet Genişliği",
+          "description": "Oyuncu adının önünde nokta için ayrılan alan."
+        },
+        "dotOffset": {
+          "name": "Nokta Konumu",
+          "description": "Noktayı sola veya sağa kaydırır."
+        }
+      },
+      "nameTag": {
+        "name": "İsim Etiketleri",
+        "description": "Oyuncuların kafasının üstündeki ismin yanında bir durum noktası gösterir.",
+        "enabled": {
+          "name": "Etkin"
+        }
+      },
+      "chat": {
+        "name": "Sohbet",
+        "description": "Sohbet mesajlarının önünde bir durum noktası gösterir.",
+        "enabled": {
+          "name": "Etkin"
+        }
+      },
+      "notifications": {
+        "name": "Bildirimler",
+        "description": "Bir arkadaşının durumu değiştiğinde bildirim al.",
+        "enabled": {
+          "name": "Etkin"
+        },
+        "friendOnline": {
+          "name": "Arkadaş çevrimiçi olunca"
+        },
+        "friendOffline": {
+          "name": "Arkadaş çevrimdışı olunca"
+        },
+        "statusChange": {
+          "name": "Arkadaş uzakta veya meşgul olunca"
+        }
+      },
+      "header": {
+        "sources": {
+          "name": "Durum Kaynakları"
+        },
+        "advanced": {
+          "name": "Gelişmiş"
+        }
+      },
+      "useLabyChat": {
+        "name": "LabyChat Arkadaşları",
+        "description": "LabyChat arkadaşlarının canlı durumunu gösterir."
+      },
+      "useLabyNetApi": {
+        "name": "laby.net",
+        "description": "Oyuncu durumlarını laby.net üzerinden sorgular."
+      },
+      "useMesh": {
+        "name": "StatusTag Sync",
+        "description": "Bu eklentiyi kullanan diğer oyuncularla durumları paylaşır."
+      },
+      "statusColors": {
+        "name": "Durum Renkleri",
+        "description": "Her durumun rengini değiştir.",
+        "onlineColor": {
+          "name": "Çevrimiçi"
+        },
+        "awayColor": {
+          "name": "Uzakta"
+        },
+        "busyColor": {
+          "name": "Meşgul"
+        },
+        "offlineColor": {
+          "name": "Çevrimdışı"
+        },
+        "invisibleColor": {
+          "name": "Görünmez"
+        },
+        "profileHiddenColor": {
+          "name": "Gizli Profil"
+        },
+        "noLabyModColor": {
+          "name": "LabyMod Yok"
+        },
+        "unknownColor": {
+          "name": "Bilinmiyor"
+        }
+      },
+      "debugLogging": {
+        "name": "Hata Ayıklama Günlüğü",
+        "description": "Sorun giderme için bir günlük dosyası yazar. İhtiyacın yoksa kapalı bırak."
+      },
+      "clearCache": {
+        "name": "Önbelleği Temizle",
+        "description": "Kayıtlı tüm durumları siler, böylece yeniden sorgulanırlar.",
+        "text": "Temizle"
+      }
+    },
+    "notify": {
+      "online": "şimdi çevrimiçi",
+      "away": "şimdi uzakta",
+      "busy": "şimdi meşgul",
+      "offline": "çevrimdışı oldu"
+    }
+  }
+}
