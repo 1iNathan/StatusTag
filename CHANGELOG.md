@@ -36,6 +36,7 @@ Faster, lighter and more accurate.
 - The debug log is written in the background and costs nothing while it's off.
 - Name tag dots are cheaper to draw.
 - Built with LabyGradle 0.11.0 and Gradle 9.7.1.
+- Declares the permissions it uses: file system access for the status cache and the debug log, and external server access for laby.net status lookups.
 
 ## 1.0.0
 

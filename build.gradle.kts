@@ -1,3 +1,5 @@
+import net.labymod.labygradle.common.internal.labymod.addon.model.AddonPermission
+
 plugins {
     id("net.labymod.labygradle")
     id("net.labymod.labygradle.addon")
@@ -27,6 +29,11 @@ labyMod {
         description = "See who is online, away or busy at a glance! Colored status dots for every player in the tab list, on name tags and in chat."
         minecraftVersion = "*"
         version = rootProject.version.toString()
+        permission(
+            AddonPermission.FILE_SYSTEM,
+            AddonPermission.EXTERNAL_SERVERS_GET,
+            AddonPermission.EXTERNAL_SERVERS_ACCESS
+        )
     }
 }
 
