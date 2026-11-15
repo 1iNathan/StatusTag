@@ -6,7 +6,7 @@ plugins {
 val versions = providers.gradleProperty("net.labymod.minecraft-versions").get().split(";")
 
 group = "net.statustag"
-version = providers.environmentVariable("VERSION").getOrElse("1.0.0")
+version = providers.environmentVariable("VERSION").getOrElse("1.1.0")
 
 labyMod {
     defaultPackageName = "net.statustag"
@@ -15,8 +15,6 @@ labyMod {
         registerVersion(versions.toTypedArray()) {
             runs {
                 getByName("client") {
-                    // When the property is set to true, you can log in with a Minecraft account
-                    // devLogin = true
                 }
             }
         }

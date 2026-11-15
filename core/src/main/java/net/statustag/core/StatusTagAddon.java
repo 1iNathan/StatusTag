@@ -1,99 +1,133 @@
 package net.statustag.core;
 
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import net.labymod.api.Laby;
 import net.labymod.api.addon.LabyAddon;
 import net.labymod.api.client.entity.player.badge.PositionType;
+import net.labymod.api.feature.BuiltinCategories;
 import net.labymod.api.models.addon.annotation.AddonMain;
-import net.statustag.core.badge.StatusDotTabBadge;
-import net.statustag.core.internal.StatusTagInternals;
-import net.statustag.core.listener.ChatStatusDotListener;
-import net.statustag.core.listener.FriendStatusToastListener;
-import net.statustag.core.listener.GameUserSyncListener;
-import net.statustag.core.listener.OnlineStatusQueueListener;
-import net.statustag.core.listener.StatusSyncListener;
-import net.statustag.core.listener.TabListStatusListener;
-import net.statustag.core.listener.UserStatusListener;
-import net.statustag.core.tag.StatusDotNameTag;
-import net.statustag.core.mesh.StatusSync;
-import net.statustag.core.service.PersistentStatusStore;
-import net.statustag.core.service.StatusDebugLog;
-import net.statustag.core.service.StatusFetchScheduler;
-import net.statustag.core.service.StatusResolver;
-import net.statustag.core.util.AddonDataPaths;
+import net.labymod.api.revision.SimpleRevision;
+import net.labymod.api.util.version.SemanticVersion;
+import net.statustag.core.command.StatusCommand;
+import net.statustag.core.config.ConfigMigration;
+import net.statustag.core.config.StatusColorsConfig;
+import net.statustag.core.listener.ChatDotListener;
+import net.statustag.core.listener.FriendNotificationListener;
+import net.statustag.core.listener.StatusKeyListener;
+import net.statustag.core.listener.StatusListener;
+import net.statustag.core.net.LabyNetClient;
+import net.statustag.core.render.StatusDotNameTag;
+import net.statustag.core.render.StatusDotTabBadge;
+import net.statustag.core.render.StatusOverviewWidget;
+import net.statustag.core.render.StatusPalette;
+import net.statustag.core.status.StatusKind;
+import net.statustag.core.status.StatusService;
+import net.statustag.core.status.StatusStore;
+import net.statustag.core.sync.LabyConnectTransport;
+import net.statustag.core.sync.StatusSync;
+import net.statustag.core.util.Async;
+import net.statustag.core.util.DataFiles;
+import net.statustag.core.util.DebugLog;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @AddonMain
 public class StatusTagAddon extends LabyAddon<StatusTagConfiguration> {
 
-  private static StatusTagAddon instance;
+  public static final String NAMESPACE = "statustag";
+  private static final String TAG_ID = "statustag_status_dot";
 
-  private final StatusTagInternals internals = new StatusTagInternals();
-  private PersistentStatusStore statusStore;
-  private StatusDebugLog debugLog;
-  private StatusResolver statusResolver;
-  private StatusFetchScheduler fetchScheduler;
-  private StatusSync statusSync;
+  private static volatile StatusTagAddon instance;
+
+  private StatusService service;
+  private StatusSync sync;
+
+  @Override
+  protected void preConfigurationLoad() {
+    this.registerListener(new ConfigMigration());
+    Laby.references().revisionRegistry().register(
+        new SimpleRevision(NAMESPACE, new SemanticVersion(1, 1, 0), "2026-11-15")
+    );
+  }
 
   @Override
   protected void enable() {
-    instance = this;
-    this.syncApiToggle();
+    StatusTagConfiguration config = this.configuration();
 
-    this.statusStore = new PersistentStatusStore();
-    this.debugLog = new StatusDebugLog();
-    this.debugLog.setEnabledSupplier(() -> {
-      StatusTagConfiguration configuration = this.configuration();
-      return configuration != null && configuration.debugLogging().get();
-    });
-    this.debugLog.bindErrorSink(message -> this.logger().warn(message));
-    this.debugLog.bootstrap();
+    DebugLog debug = new DebugLog(DataFiles.debugLog(), Async::run);
+    debug.setEnabled(config.debugLogging().get());
+    config.debugLogging().addChangeListener(debug::setEnabled);
 
-    this.statusResolver = new StatusResolver(this.statusStore, this.debugLog);
-    this.statusResolver.configure(this::configuration, () -> this.internals);
+    StatusColorsConfig colors = config.statusColors();
+    StatusPalette palette = new StatusPalette(kind -> colors.property(kind).get());
+    for (StatusKind kind : StatusKind.values()) {
+      colors.property(kind).addChangeListener(palette::rebuild);
+    }
+    palette.setShowPlayersWithoutLabyMod(config.showPlayersWithoutLabyMod().get());
+    config.showPlayersWithoutLabyMod().addChangeListener(palette::setShowPlayersWithoutLabyMod);
 
-    this.fetchScheduler = new StatusFetchScheduler(
-        this.statusResolver,
-        this.debugLog,
-        this::configuration,
-        () -> this.internals
+    StatusStore store = new StatusStore(DataFiles.cache(), DataFiles.legacyCache());
+    this.service = new StatusService(config, store, palette, debug, new LabyNetClient());
+    this.sync = new StatusSync(
+        config,
+        this.service,
+        new LabyConnectTransport(),
+        debug,
+        System::currentTimeMillis,
+        () -> ThreadLocalRandom.current().nextLong(150L, 1_201L)
     );
-    this.statusResolver.setFetchScheduler(this.fetchScheduler);
+    instance = this;
+
+    Async.run(() -> {
+      int loaded = store.load(System.currentTimeMillis());
+      if (debug.enabled()) {
+        debug.log("cache loaded entries=" + loaded);
+      }
+    });
+
+    config.enabled().addChangeListener(enabled -> {
+      if (enabled) {
+        this.service.syncSession();
+        this.service.rebuildTabPlayers();
+        this.sync.requestResync();
+      } else {
+        this.service.demoteLive();
+      }
+    });
+    config.useLabyChat().addChangeListener(enabled -> {
+      if (enabled) {
+        this.service.syncSession();
+      } else {
+        this.service.demoteLive();
+      }
+    });
+    config.useLabyNetApi().addChangeListener(enabled -> {
+      if (!enabled) {
+        this.service.scheduler().clear();
+      }
+    });
+    config.useMesh().addChangeListener(enabled -> {
+      if (enabled) {
+        this.sync.requestResync();
+      }
+    });
 
     this.registerSettingCategory();
-    this.configuration().useLabyNetApi().addChangeListener(value -> this.syncApiToggle());
+    this.placeInModsCategory(BuiltinCategories.PLAYER);
 
-    this.debugLog.sessionStart(StatusTagMeta.VERSION, StatusDebugLog.config(
-        "enabled", this.configuration().enabled().get(),
-        "showInTabList", this.configuration().tabList().enabled().get(),
-        "useLabyChat", this.configuration().isLabyChatEnabled(),
-        "useLabyNetApi", this.configuration().isApiEnabled()
-    ));
+    this.registerListener(new StatusListener(this.service, this.sync));
+    this.registerListener(new ChatDotListener(config, this.service));
+    this.registerListener(new FriendNotificationListener(config, palette));
+    this.registerCommand(new StatusCommand(this.service, this.sync));
+    this.registerListener(new StatusKeyListener(config, palette));
+    this.labyAPI().hudWidgetRegistry().register(new StatusOverviewWidget(this.service));
 
-    this.statusSync = new StatusSync(this.statusResolver, this.debugLog, this::configuration);
+    this.registerRenderers(config);
+    this.service.syncSession();
+    this.service.rebuildTabPlayers();
 
-    this.registerListener(new UserStatusListener(
-        this.statusResolver,
-        this.debugLog,
-        this::configuration
-    ));
-    this.registerListener(new OnlineStatusQueueListener(this.fetchScheduler));
-    this.registerListener(new GameUserSyncListener(this.statusResolver, this::configuration));
-    this.registerListener(new TabListStatusListener(
-        this.statusResolver,
-        this.fetchScheduler,
-        this.debugLog,
-        this::configuration
-    ));
-    this.registerListener(new StatusSyncListener(this.statusSync));
-    this.registerListener(new ChatStatusDotListener(this));
-    this.registerListener(new FriendStatusToastListener(this::configuration));
-
-    this.statusResolver.syncFromSession();
-
-    this.registerTags();
-
-    this.logger().info("StatusTag v" + StatusTagMeta.VERSION + " enabled");
-    this.logger().info("StatusTag debug log: " + this.debugLog.logFile());
-    this.logger().info("StatusTag data dir: " + AddonDataPaths.dataDirectory().toAbsolutePath());
+    this.logger().info("StatusTag " + this.addonInfo().getVersion() + " enabled");
   }
 
   @Override
@@ -101,61 +135,46 @@ public class StatusTagAddon extends LabyAddon<StatusTagConfiguration> {
     return StatusTagConfiguration.class;
   }
 
-  public static StatusTagAddon instance() {
+  public static @Nullable StatusTagAddon instance() {
     return instance;
   }
 
-  public StatusResolver statusResolver() {
-    return this.statusResolver;
+  public boolean isNameTagActive() {
+    StatusTagConfiguration config = this.configuration();
+    return config.enabled().get() && config.nameTag().enabled().get() && !this.service.isSuppressed();
   }
 
-  public StatusTagInternals internals() {
-    return this.internals;
+  public int nameTagArgb(@NotNull UUID uniqueId) {
+    return this.service.shownArgb(uniqueId);
   }
 
-  public PersistentStatusStore statusStore() {
-    return this.statusStore;
+  public void clearCache() {
+    this.service.clearCache();
+    this.sync.requestResync();
   }
 
-  public StatusSync statusSync() {
-    return this.statusSync;
-  }
-
-  private void registerTags() {
+  private void registerRenderers(@NotNull StatusTagConfiguration config) {
+    StatusDotNameTag nameTag = new StatusDotNameTag(config.nameTag());
     try {
       Laby.references().tagRegistry().registerBefore(
           "labymod_role",
-          "statustag_status_dot",
+          TAG_ID,
           net.labymod.api.client.entity.player.tag.PositionType.LEFT_TO_NAME,
-          new StatusDotNameTag(this)
+          nameTag
       );
     } catch (RuntimeException exception) {
-      this.logger().warn("Falling back to plain name-tag registration: " + exception.getMessage());
       Laby.references().tagRegistry().register(
-          "statustag_status_dot",
+          TAG_ID,
           net.labymod.api.client.entity.player.tag.PositionType.LEFT_TO_NAME,
-          new StatusDotNameTag(this)
+          nameTag
       );
     }
 
+    StatusDotTabBadge badge = new StatusDotTabBadge(config, this.service);
     try {
-      Laby.references().badgeRegistry().registerBefore(
-          "server_badge",
-          "statustag_status_dot",
-          PositionType.LEFT_TO_NAME,
-          new StatusDotTabBadge(this)
-      );
+      Laby.references().badgeRegistry().registerBefore("server_badge", TAG_ID, PositionType.LEFT_TO_NAME, badge);
     } catch (RuntimeException exception) {
-      this.logger().warn("Falling back to plain tab-badge registration: " + exception.getMessage());
-      Laby.references().badgeRegistry().register(
-          "statustag_status_dot",
-          PositionType.LEFT_TO_NAME,
-          new StatusDotTabBadge(this)
-      );
+      Laby.references().badgeRegistry().register(TAG_ID, PositionType.LEFT_TO_NAME, badge);
     }
-  }
-
-  private void syncApiToggle() {
-    this.internals.setFetchOnlineStatusFromApi(this.configuration().isApiEnabled());
   }
 }

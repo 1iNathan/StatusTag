@@ -28,6 +28,10 @@
         "description": "Mostra um ponto de status ao lado do nome acima da cabeça dos jogadores.",
         "enabled": {
           "name": "Ativado"
+        },
+        "dotScale": {
+          "name": "Tamanho do ponto",
+          "description": "Tamanho do ponto ao lado do nome acima da cabeça dos jogadores."
         }
       },
       "chat": {
@@ -35,6 +39,10 @@
         "description": "Mostra um ponto de status antes das mensagens do chat.",
         "enabled": {
           "name": "Ativado"
+        },
+        "detectSender": {
+          "name": "Detectar remetente pelo nome",
+          "description": "Descobre quem enviou a mensagem pelo nome quando o servidor não informa."
         }
       },
       "notifications": {
@@ -42,6 +50,14 @@
         "description": "Receba um aviso quando o status de um amigo mudar.",
         "enabled": {
           "name": "Ativado"
+        },
+        "pinnedOnly": {
+          "name": "Só amigos fixados",
+          "description": "Só avisa sobre os amigos que você fixou no LabyChat."
+        },
+        "pinnedSound": {
+          "name": "Som para amigos fixados",
+          "description": "Toca um som quando aparece uma notificação de um amigo fixado."
         },
         "friendOnline": {
           "name": "Amigo fica online"
@@ -51,7 +67,23 @@
         },
         "statusChange": {
           "name": "Amigo fica ausente ou ocupado"
+        },
+        "friendJoinedServer": {
+          "name": "Amigo entra no seu servidor",
+          "description": "Avisa quando um amigo entra no servidor em que você está jogando."
         }
+      },
+      "showPlayersWithoutLabyMod": {
+        "name": "Jogadores sem LabyMod",
+        "description": "Mostra um ponto para jogadores que não usam o LabyMod ou cujo status é desconhecido."
+      },
+      "cycleStatusKey": {
+        "name": "Trocar seu status",
+        "description": "Troca seu status do LabyChat entre Online, Ausente e Ocupado."
+      },
+      "disabledServers": {
+        "name": "Servidores desativados",
+        "description": "O StatusTag esconde os pontos nesses servidores. Digite o endereço de um servidor e aperte Enter, por exemplo hypixel.net."
       },
       "header": {
         "sources": {
@@ -67,7 +99,7 @@
       },
       "useLabyNetApi": {
         "name": "laby.net",
-        "description": "Consulta o status dos jogadores no laby.net."
+        "description": "Consulta o status dos jogadores no laby.net. Status ocultos continuam ocultos."
       },
       "useMesh": {
         "name": "StatusTag Sync",
@@ -76,6 +108,14 @@
       "statusColors": {
         "name": "Cores de status",
         "description": "Mude a cor de cada status.",
+        "header": {
+          "labyStatuses": {
+            "name": "Status do Laby"
+          },
+          "otherStatuses": {
+            "name": "Outros"
+          }
+        },
         "onlineColor": {
           "name": "Online"
         },
@@ -115,7 +155,56 @@
       "online": "está online agora",
       "away": "está ausente agora",
       "busy": "está ocupado agora",
-      "offline": "ficou offline"
+      "offline": "ficou offline",
+      "joinedServer": "entrou no seu servidor"
+    },
+    "status": {
+      "online": "Online",
+      "away": "Ausente",
+      "busy": "Ocupado",
+      "offline": "Offline",
+      "invisible": "Aparece offline",
+      "profile_hidden": "Status oculto no laby.net",
+      "no_labymod": "Sem conta LabyMod",
+      "unknown": "Status ainda desconhecido"
+    },
+    "command": {
+      "summary": "%s jogadores na lista, %s com status conhecido, %s usam StatusTag, %s aguardando consulta",
+      "notFound": "%s não está na lista de jogadores.",
+      "source": {
+        "self": "seu próprio status",
+        "friend": "amigo do LabyChat",
+        "sync": "StatusTag Sync",
+        "api": "laby.net",
+        "cache": "salvo antes",
+        "none": "ainda não consultado"
+      },
+      "age": {
+        "now": "agora",
+        "minutes": "há %s min",
+        "hours": "há %s h",
+        "days": "há %s d"
+      },
+      "lastOnline": "visto %s",
+      "friends": {
+        "header": "Amigos online (%s):",
+        "none": "Nenhum dos seus amigos está online.",
+        "notConnected": "Você não está conectado ao LabyChat.",
+        "more": "e mais %s"
+      }
+    },
+    "chat": {
+      "openProfile": "Clique para abrir o perfil no laby.net"
+    },
+    "ownStatus": {
+      "changed": "Seu status agora é %s"
+    },
+    "hudWidget": {
+      "status_overview": {
+        "name": "Resumo de status",
+        "description": "Mostra quantos jogadores do servidor estão online, ausentes, ocupados ou offline.",
+        "label": "Status"
+      }
     }
   }
 }

@@ -28,6 +28,10 @@
         "description": "Oyuncuların kafasının üstündeki ismin yanında bir durum noktası gösterir.",
         "enabled": {
           "name": "Etkin"
+        },
+        "dotScale": {
+          "name": "Nokta Boyutu",
+          "description": "Oyuncuların başı üstündeki ismin yanındaki noktanın boyutu."
         }
       },
       "chat": {
@@ -35,6 +39,10 @@
         "description": "Sohbet mesajlarının önünde bir durum noktası gösterir.",
         "enabled": {
           "name": "Etkin"
+        },
+        "detectSender": {
+          "name": "Göndereni İsimden Bul",
+          "description": "Sunucu belirtmediğinde mesajı kimin gönderdiğini isminden bulur."
         }
       },
       "notifications": {
@@ -42,6 +50,14 @@
         "description": "Bir arkadaşının durumu değiştiğinde bildirim al.",
         "enabled": {
           "name": "Etkin"
+        },
+        "pinnedOnly": {
+          "name": "Yalnızca Sabitlenen Arkadaşlar",
+          "description": "Yalnızca LabyChat'te sabitlediğin arkadaşlar için bildirim gösterir."
+        },
+        "pinnedSound": {
+          "name": "Sabitlenen arkadaşlar için ses",
+          "description": "Sabitlediğin bir arkadaşla ilgili bildirim geldiğinde ses çalar."
         },
         "friendOnline": {
           "name": "Arkadaş çevrimiçi olunca"
@@ -51,7 +67,23 @@
         },
         "statusChange": {
           "name": "Arkadaş uzakta veya meşgul olunca"
+        },
+        "friendJoinedServer": {
+          "name": "Arkadaşın sunucuna katıldı",
+          "description": "Bir arkadaşın oynadığın sunucuya katıldığında seni bilgilendirir."
         }
+      },
+      "showPlayersWithoutLabyMod": {
+        "name": "LabyMod Kullanmayan Oyuncular",
+        "description": "LabyMod kullanmayan veya durumu bilinmeyen oyuncular için nokta gösterir."
+      },
+      "cycleStatusKey": {
+        "name": "Durumunu Değiştir",
+        "description": "LabyChat durumunu Çevrimiçi, Uzakta ve Meşgul arasında değiştirir."
+      },
+      "disabledServers": {
+        "name": "Devre dışı sunucular",
+        "description": "StatusTag bu sunucularda noktaları gizler. Bir sunucu adresi yaz ve Enter'a bas, örneğin hypixel.net."
       },
       "header": {
         "sources": {
@@ -67,7 +99,7 @@
       },
       "useLabyNetApi": {
         "name": "laby.net",
-        "description": "Oyuncu durumlarını laby.net üzerinden sorgular."
+        "description": "Oyuncu durumlarını laby.net'ten alır. Gizlenen durumlar gizli kalır."
       },
       "useMesh": {
         "name": "StatusTag Sync",
@@ -76,6 +108,14 @@
       "statusColors": {
         "name": "Durum Renkleri",
         "description": "Her durumun rengini değiştir.",
+        "header": {
+          "labyStatuses": {
+            "name": "Laby Durumları"
+          },
+          "otherStatuses": {
+            "name": "Diğer"
+          }
+        },
         "onlineColor": {
           "name": "Çevrimiçi"
         },
@@ -115,7 +155,56 @@
       "online": "şimdi çevrimiçi",
       "away": "şimdi uzakta",
       "busy": "şimdi meşgul",
-      "offline": "çevrimdışı oldu"
+      "offline": "çevrimdışı oldu",
+      "joinedServer": "sunucuna katıldı"
+    },
+    "status": {
+      "online": "Çevrimiçi",
+      "away": "Uzakta",
+      "busy": "Meşgul",
+      "offline": "Çevrimdışı",
+      "invisible": "Çevrimdışı görünüyor",
+      "profile_hidden": "Durum laby.net'te gizli",
+      "no_labymod": "LabyMod hesabı yok",
+      "unknown": "Durum henüz bilinmiyor"
+    },
+    "command": {
+      "summary": "Listede %s oyuncu, %s bilinen durum, %s StatusTag kullanıyor, %s sorgu bekliyor",
+      "notFound": "%s oyuncu listesinde değil.",
+      "source": {
+        "self": "kendi durumun",
+        "friend": "LabyChat arkadaşı",
+        "sync": "StatusTag Sync",
+        "api": "laby.net",
+        "cache": "daha önce kaydedildi",
+        "none": "henüz sorgulanmadı"
+      },
+      "age": {
+        "now": "az önce",
+        "minutes": "%s dk önce",
+        "hours": "%s sa önce",
+        "days": "%s gün önce"
+      },
+      "lastOnline": "son görülme %s",
+      "friends": {
+        "header": "Çevrimiçi arkadaşlar (%s):",
+        "none": "Hiçbir arkadaşın çevrimiçi değil.",
+        "notConnected": "LabyChat'e bağlı değilsin.",
+        "more": "ve %s kişi daha"
+      }
+    },
+    "chat": {
+      "openProfile": "laby.net profilini açmak için tıkla"
+    },
+    "ownStatus": {
+      "changed": "Durumun artık %s"
+    },
+    "hudWidget": {
+      "status_overview": {
+        "name": "Durum Özeti",
+        "description": "Sunucudaki oyunculardan kaçının çevrimiçi, uzakta, meşgul veya çevrimdışı olduğunu gösterir.",
+        "label": "Durumlar"
+      }
     }
   }
 }

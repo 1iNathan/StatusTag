@@ -28,6 +28,10 @@
         "description": "Shows a status dot next to the name above players' heads.",
         "enabled": {
           "name": "Enabled"
+        },
+        "dotScale": {
+          "name": "Dot Size",
+          "description": "Size of the dot next to the name above players' heads."
         }
       },
       "chat": {
@@ -35,6 +39,10 @@
         "description": "Shows a status dot in front of chat messages.",
         "enabled": {
           "name": "Enabled"
+        },
+        "detectSender": {
+          "name": "Detect Sender by Name",
+          "description": "Finds who sent a message by their name when the server doesn't tell."
         }
       },
       "notifications": {
@@ -42,6 +50,14 @@
         "description": "Get notified when a friend's status changes.",
         "enabled": {
           "name": "Enabled"
+        },
+        "pinnedOnly": {
+          "name": "Pinned Friends Only",
+          "description": "Only notifies you about friends you pinned in LabyChat."
+        },
+        "pinnedSound": {
+          "name": "Sound for Pinned Friends",
+          "description": "Plays a sound when a notification about a pinned friend shows up."
         },
         "friendOnline": {
           "name": "Friend Comes Online"
@@ -51,7 +67,23 @@
         },
         "statusChange": {
           "name": "Friend Becomes Away or Busy"
+        },
+        "friendJoinedServer": {
+          "name": "Friend Joins Your Server",
+          "description": "Notifies you when a friend joins the server you're playing on."
         }
+      },
+      "showPlayersWithoutLabyMod": {
+        "name": "Players Without LabyMod",
+        "description": "Shows a dot for players who don't use LabyMod or whose status is unknown."
+      },
+      "cycleStatusKey": {
+        "name": "Switch Your Status",
+        "description": "Switches your LabyChat status between Online, Away and Busy."
+      },
+      "disabledServers": {
+        "name": "Disabled Servers",
+        "description": "StatusTag hides its dots on these servers. Type a server address and press Enter, for example hypixel.net."
       },
       "header": {
         "sources": {
@@ -67,7 +99,7 @@
       },
       "useLabyNetApi": {
         "name": "laby.net",
-        "description": "Looks up player statuses on laby.net."
+        "description": "Looks up player statuses on laby.net. Statuses that players hide stay hidden."
       },
       "useMesh": {
         "name": "StatusTag Sync",
@@ -76,6 +108,14 @@
       "statusColors": {
         "name": "Status Colors",
         "description": "Change the color of every status.",
+        "header": {
+          "labyStatuses": {
+            "name": "Laby Statuses"
+          },
+          "otherStatuses": {
+            "name": "Other"
+          }
+        },
         "onlineColor": {
           "name": "Online"
         },
@@ -115,7 +155,56 @@
       "online": "is now online",
       "away": "is now away",
       "busy": "is now busy",
-      "offline": "went offline"
+      "offline": "went offline",
+      "joinedServer": "joined your server"
+    },
+    "status": {
+      "online": "Online",
+      "away": "Away",
+      "busy": "Busy",
+      "offline": "Offline",
+      "invisible": "Appears offline",
+      "profile_hidden": "Status hidden on laby.net",
+      "no_labymod": "No LabyMod account",
+      "unknown": "Status not known yet"
+    },
+    "command": {
+      "summary": "%s players in the tab list, %s with a known status, %s using StatusTag, %s waiting for a lookup",
+      "notFound": "%s is not in the tab list.",
+      "source": {
+        "self": "your own status",
+        "friend": "LabyChat friend",
+        "sync": "StatusTag Sync",
+        "api": "laby.net",
+        "cache": "saved from earlier",
+        "none": "not looked up yet"
+      },
+      "age": {
+        "now": "just now",
+        "minutes": "%s min ago",
+        "hours": "%s h ago",
+        "days": "%s d ago"
+      },
+      "lastOnline": "last online %s",
+      "friends": {
+        "header": "Online friends (%s):",
+        "none": "None of your friends are online.",
+        "notConnected": "You're not connected to LabyChat.",
+        "more": "and %s more"
+      }
+    },
+    "chat": {
+      "openProfile": "Click to open their laby.net profile"
+    },
+    "ownStatus": {
+      "changed": "Your status is now %s"
+    },
+    "hudWidget": {
+      "status_overview": {
+        "name": "Status Overview",
+        "description": "Shows how many players on the server are online, away, busy or offline.",
+        "label": "Statuses"
+      }
     }
   }
 }

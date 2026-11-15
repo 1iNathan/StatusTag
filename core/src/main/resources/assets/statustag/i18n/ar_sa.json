@@ -28,6 +28,10 @@
         "description": "يعرض نقطة حالة بجانب الاسم فوق رؤوس اللاعبين.",
         "enabled": {
           "name": "مفعّل"
+        },
+        "dotScale": {
+          "name": "حجم النقطة",
+          "description": "حجم النقطة بجانب الاسم فوق رؤوس اللاعبين."
         }
       },
       "chat": {
@@ -35,6 +39,10 @@
         "description": "يعرض نقطة حالة قبل رسائل الدردشة.",
         "enabled": {
           "name": "مفعّل"
+        },
+        "detectSender": {
+          "name": "معرفة المرسل من اسمه",
+          "description": "يتعرّف على مرسل الرسالة من اسمه عندما لا يحدده السيرفر."
         }
       },
       "notifications": {
@@ -42,6 +50,14 @@
         "description": "احصل على إشعار عندما تتغير حالة صديقك.",
         "enabled": {
           "name": "مفعّل"
+        },
+        "pinnedOnly": {
+          "name": "الأصدقاء المثبّتون فقط",
+          "description": "يرسل إشعارات فقط عن الأصدقاء الذين ثبّتّهم في LabyChat."
+        },
+        "pinnedSound": {
+          "name": "صوت للأصدقاء المثبّتين",
+          "description": "يشغّل صوتًا عند ظهور إشعار عن صديق مثبّت."
         },
         "friendOnline": {
           "name": "صديق يصبح متصلًا"
@@ -51,7 +67,23 @@
         },
         "statusChange": {
           "name": "صديق يصبح بعيدًا أو مشغولًا"
+        },
+        "friendJoinedServer": {
+          "name": "صديق يدخل سيرفرك",
+          "description": "ينبّهك عندما يدخل صديق السيرفر الذي تلعب فيه."
         }
+      },
+      "showPlayersWithoutLabyMod": {
+        "name": "اللاعبون بدون LabyMod",
+        "description": "يعرض نقطة للاعبين الذين لا يستخدمون LabyMod أو حالتهم غير معروفة."
+      },
+      "cycleStatusKey": {
+        "name": "تبديل حالتك",
+        "description": "يبدّل حالتك في LabyChat بين متصل وبعيد ومشغول."
+      },
+      "disabledServers": {
+        "name": "السيرفرات المعطّلة",
+        "description": "يخفي StatusTag النقاط في هذه السيرفرات. اكتب عنوان السيرفر واضغط Enter، مثل hypixel.net."
       },
       "header": {
         "sources": {
@@ -67,7 +99,7 @@
       },
       "useLabyNetApi": {
         "name": "laby.net",
-        "description": "يجلب حالات اللاعبين من laby.net."
+        "description": "يجلب حالات اللاعبين من laby.net. الحالات المخفية تبقى مخفية."
       },
       "useMesh": {
         "name": "مزامنة StatusTag",
@@ -76,6 +108,14 @@
       "statusColors": {
         "name": "ألوان الحالات",
         "description": "غيّر لون كل حالة.",
+        "header": {
+          "labyStatuses": {
+            "name": "حالات Laby"
+          },
+          "otherStatuses": {
+            "name": "أخرى"
+          }
+        },
         "onlineColor": {
           "name": "متصل"
         },
@@ -115,7 +155,56 @@
       "online": "أصبح الآن متصلًا",
       "away": "أصبح الآن بعيدًا",
       "busy": "أصبح الآن مشغولًا",
-      "offline": "أصبح غير متصل"
+      "offline": "أصبح غير متصل",
+      "joinedServer": "دخل سيرفرك"
+    },
+    "status": {
+      "online": "متصل",
+      "away": "بعيد",
+      "busy": "مشغول",
+      "offline": "غير متصل",
+      "invisible": "يظهر غير متصل",
+      "profile_hidden": "الحالة مخفية في laby.net",
+      "no_labymod": "بدون حساب LabyMod",
+      "unknown": "الحالة غير معروفة بعد"
+    },
+    "command": {
+      "summary": "%s لاعب في قائمة Tab، %s بحالة معروفة، %s يستخدمون StatusTag، %s بانتظار الجلب",
+      "notFound": "%s غير موجود في قائمة Tab.",
+      "source": {
+        "self": "حالتك أنت",
+        "friend": "صديق في LabyChat",
+        "sync": "مزامنة StatusTag",
+        "api": "laby.net",
+        "cache": "محفوظة من قبل",
+        "none": "لم تُجلب بعد"
+      },
+      "age": {
+        "now": "الآن",
+        "minutes": "قبل %s دقيقة",
+        "hours": "قبل %s ساعة",
+        "days": "قبل %s يوم"
+      },
+      "lastOnline": "آخر ظهور %s",
+      "friends": {
+        "header": "الأصدقاء المتصلون (%s):",
+        "none": "لا يوجد أحد من أصدقائك متصل.",
+        "notConnected": "أنت غير متصل بـ LabyChat.",
+        "more": "و%s آخرون"
+      }
+    },
+    "chat": {
+      "openProfile": "اضغط لفتح ملفه في laby.net"
+    },
+    "ownStatus": {
+      "changed": "حالتك الآن %s"
+    },
+    "hudWidget": {
+      "status_overview": {
+        "name": "ملخص الحالات",
+        "description": "يعرض عدد اللاعبين المتصلين والبعيدين والمشغولين وغير المتصلين في السيرفر.",
+        "label": "الحالات"
+      }
     }
   }
 }

@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.1.0
+
+Faster, lighter and more accurate.
+
+- Status lookups now use a single laby.net request per player instead of up to three.
+- Players you can see in the world are looked up first.
+- Uses laby.net's bulk status lookup: up to 100 players per request instead of one request per player, so a full tab list is filled in seconds. If laby.net rejects it or it keeps failing, StatusTag switches to single lookups on its own and tries bulk again later.
+- Request pacing follows laby.net's own rate-limit headers, so lookups are faster when the API allows it and never run into limits.
+- Statuses refresh every few minutes while a player is in the tab list. Previously a status could stay unchanged for up to 30 days.
+- Statuses that players hide on laby.net stay hidden. They show as Hidden Profile and are re-checked once a day.
+- New default colors: Offline, Invisible and Hidden Profile are gray, Unknown and No LabyMod are dark gray. Colors you changed yourself are kept.
+- StatusTag Sync replies only to the player who asked instead of the whole server, batches replies, and sends heartbeats only to other StatusTag users. Compatible with 1.0.0.
+- Players on offline-mode servers and NPCs are no longer looked up.
+- Unknown players show the Unknown color instead of a green dot until their status is known.
+- Chat messages from players with an unknown status trigger a lookup right away.
+- Chat dots now also work on servers that don't tell who sent a message: the sender is found by their name in the tab list. Can be turned off.
+- Hover over a chat dot to see the status, click it to open the player's laby.net profile.
+- New HUD widget: Status Overview shows how many players on the server are online, away, busy or offline.
+- Change your own LabyChat status with /statustag online, away, busy or offline, or with a keybind that switches between Online, Away and Busy.
+- /statustag <player> also shows when an offline player was last online, from LabyChat for friends and from laby.net for everyone else.
+- New command: /statustag shows how many players are known, how many use StatusTag and what's still waiting. /statustag <player> shows one player's status, where it came from and how old it is.
+- New setting: Name Tags, Dot Size.
+- New setting: Notifications, Pinned Friends Only. Only notifies you about friends you pinned in LabyChat. On for new installs, off if you update from 1.0.0.
+- New setting: Notifications, Sound for Pinned Friends. Plays a sound with notifications about pinned friends.
+- New notification: a friend joined the server you're playing on. Can be turned off.
+- New command: /statustag friends lists your online LabyChat friends, pinned first, with their status and server. Click a name to open their laby.net profile.
+- New setting: Disabled Servers. StatusTag hides its dots and stops lookups on the servers you add. Subdomains are included, so hypixel.net also covers mc.hypixel.net.
+- New setting: Players Without LabyMod. Shows a dark gray dot for players without LabyMod or with an unknown status. Off for new installs, on if you update from 1.0.0.
+- Status Colors are laid out in two groups of two per row, so the names are readable again.
+- New installs start with notifications turned off and a narrower tab list badge. Settings you already have are kept.
+- StatusTag is listed under Player in the Mods menu.
+- Notifications use your custom status colors.
+- The status cache is written in the background in a compact format and keeps at most 5,000 players. Your old cache is migrated automatically.
+- The debug log is written in the background and costs nothing while it's off.
+- Name tag dots are cheaper to draw.
+- Built with LabyGradle 0.11.0 and Gradle 9.7.1.
+
 ## 1.0.0
 
 Initial release.

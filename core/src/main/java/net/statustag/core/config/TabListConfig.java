@@ -18,7 +18,7 @@ public class TabListConfig extends Config {
   private final ConfigProperty<Float> dotSize = new ConfigProperty<>(3.5F);
 
   @SliderSetting(min = 8.0F, max = 16.0F, steps = 1.0F)
-  private final ConfigProperty<Float> badgeWidth = new ConfigProperty<>(11.0F);
+  private final ConfigProperty<Float> badgeWidth = new ConfigProperty<>(8.0F);
 
   @SliderSetting(min = -4.0F, max = 4.0F, steps = 0.5F)
   private final ConfigProperty<Float> dotOffset = new ConfigProperty<>(0.0F);

@@ -28,6 +28,10 @@
         "description": "Показывает точку статуса рядом с именем над головой игрока.",
         "enabled": {
           "name": "Включено"
+        },
+        "dotScale": {
+          "name": "Размер точки",
+          "description": "Размер точки рядом с ником над головой игрока."
         }
       },
       "chat": {
@@ -35,6 +39,10 @@
         "description": "Показывает точку статуса перед сообщениями в чате.",
         "enabled": {
           "name": "Включено"
+        },
+        "detectSender": {
+          "name": "Определять отправителя по нику",
+          "description": "Находит автора сообщения по нику, если сервер его не передаёт."
         }
       },
       "notifications": {
@@ -42,6 +50,14 @@
         "description": "Получай уведомление, когда статус друга меняется.",
         "enabled": {
           "name": "Включено"
+        },
+        "pinnedOnly": {
+          "name": "Только закреплённые друзья",
+          "description": "Уведомляет только о друзьях, которых ты закрепил в LabyChat."
+        },
+        "pinnedSound": {
+          "name": "Звук для закреплённых друзей",
+          "description": "Проигрывает звук, когда приходит уведомление о закреплённом друге."
         },
         "friendOnline": {
           "name": "Друг заходит в сеть"
@@ -51,7 +67,23 @@
         },
         "statusChange": {
           "name": "Друг отошёл или занят"
+        },
+        "friendJoinedServer": {
+          "name": "Друг зашёл на твой сервер",
+          "description": "Уведомляет, когда друг заходит на сервер, на котором ты играешь."
         }
+      },
+      "showPlayersWithoutLabyMod": {
+        "name": "Игроки без LabyMod",
+        "description": "Показывает точку для игроков без LabyMod или с неизвестным статусом."
+      },
+      "cycleStatusKey": {
+        "name": "Сменить статус",
+        "description": "Переключает твой статус LabyChat: В сети, Отошёл, Занят."
+      },
+      "disabledServers": {
+        "name": "Отключённые серверы",
+        "description": "На этих серверах StatusTag скрывает точки. Введи адрес сервера и нажми Enter, например hypixel.net."
       },
       "header": {
         "sources": {
@@ -67,7 +99,7 @@
       },
       "useLabyNetApi": {
         "name": "laby.net",
-        "description": "Запрашивает статусы игроков на laby.net."
+        "description": "Запрашивает статусы игроков на laby.net. Скрытые статусы остаются скрытыми."
       },
       "useMesh": {
         "name": "StatusTag Sync",
@@ -76,6 +108,14 @@
       "statusColors": {
         "name": "Цвета статусов",
         "description": "Измени цвет каждого статуса.",
+        "header": {
+          "labyStatuses": {
+            "name": "Статусы Laby"
+          },
+          "otherStatuses": {
+            "name": "Другие"
+          }
+        },
         "onlineColor": {
           "name": "В сети"
         },
@@ -115,7 +155,56 @@
       "online": "теперь в сети",
       "away": "теперь отошёл",
       "busy": "теперь занят",
-      "offline": "вышел из сети"
+      "offline": "вышел из сети",
+      "joinedServer": "зашёл на твой сервер"
+    },
+    "status": {
+      "online": "В сети",
+      "away": "Отошёл",
+      "busy": "Занят",
+      "offline": "Не в сети",
+      "invisible": "Выглядит не в сети",
+      "profile_hidden": "Статус скрыт на laby.net",
+      "no_labymod": "Нет аккаунта LabyMod",
+      "unknown": "Статус пока неизвестен"
+    },
+    "command": {
+      "summary": "Игроков в списке: %s, с известным статусом: %s, используют StatusTag: %s, ожидают проверки: %s",
+      "notFound": "%s нет в списке игроков.",
+      "source": {
+        "self": "твой статус",
+        "friend": "друг в LabyChat",
+        "sync": "StatusTag Sync",
+        "api": "laby.net",
+        "cache": "сохранено ранее",
+        "none": "ещё не проверялся"
+      },
+      "age": {
+        "now": "только что",
+        "minutes": "%s мин назад",
+        "hours": "%s ч назад",
+        "days": "%s дн назад"
+      },
+      "lastOnline": "был в сети %s",
+      "friends": {
+        "header": "Друзья в сети (%s):",
+        "none": "Никого из твоих друзей нет в сети.",
+        "notConnected": "Ты не подключён к LabyChat.",
+        "more": "и ещё %s"
+      }
+    },
+    "chat": {
+      "openProfile": "Нажми, чтобы открыть профиль на laby.net"
+    },
+    "ownStatus": {
+      "changed": "Твой статус теперь: %s"
+    },
+    "hudWidget": {
+      "status_overview": {
+        "name": "Обзор статусов",
+        "description": "Показывает, сколько игроков на сервере в сети, отошли, заняты или не в сети.",
+        "label": "Статусы"
+      }
     }
   }
 }

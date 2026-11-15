@@ -28,6 +28,10 @@
         "description": "Affiche un point de statut à côté du nom au-dessus de la tête des joueurs.",
         "enabled": {
           "name": "Activé"
+        },
+        "dotScale": {
+          "name": "Taille du point",
+          "description": "Taille du point à côté du nom au-dessus des joueurs."
         }
       },
       "chat": {
@@ -35,6 +39,10 @@
         "description": "Affiche un point de statut devant les messages du chat.",
         "enabled": {
           "name": "Activé"
+        },
+        "detectSender": {
+          "name": "Détecter l'expéditeur par son nom",
+          "description": "Trouve l'auteur d'un message grâce à son nom quand le serveur ne l'indique pas."
         }
       },
       "notifications": {
@@ -42,6 +50,14 @@
         "description": "Sois averti quand le statut d'un ami change.",
         "enabled": {
           "name": "Activé"
+        },
+        "pinnedOnly": {
+          "name": "Amis épinglés uniquement",
+          "description": "Te prévient seulement pour les amis que tu as épinglés dans LabyChat."
+        },
+        "pinnedSound": {
+          "name": "Son pour les amis épinglés",
+          "description": "Joue un son quand une notification concerne un ami épinglé."
         },
         "friendOnline": {
           "name": "Un ami se connecte"
@@ -51,7 +67,23 @@
         },
         "statusChange": {
           "name": "Un ami devient absent ou occupé"
+        },
+        "friendJoinedServer": {
+          "name": "Un ami rejoint ton serveur",
+          "description": "Te prévient quand un ami rejoint le serveur sur lequel tu joues."
         }
+      },
+      "showPlayersWithoutLabyMod": {
+        "name": "Joueurs sans LabyMod",
+        "description": "Affiche un point pour les joueurs qui n'utilisent pas LabyMod ou dont le statut est inconnu."
+      },
+      "cycleStatusKey": {
+        "name": "Changer ton statut",
+        "description": "Change ton statut LabyChat entre En ligne, Absent et Occupé."
+      },
+      "disabledServers": {
+        "name": "Serveurs désactivés",
+        "description": "StatusTag masque ses points sur ces serveurs. Saisis l'adresse d'un serveur et appuie sur Entrée, par exemple hypixel.net."
       },
       "header": {
         "sources": {
@@ -67,7 +99,7 @@
       },
       "useLabyNetApi": {
         "name": "laby.net",
-        "description": "Recherche le statut des joueurs sur laby.net."
+        "description": "Récupère le statut des joueurs sur laby.net. Les statuts masqués restent masqués."
       },
       "useMesh": {
         "name": "StatusTag Sync",
@@ -76,6 +108,14 @@
       "statusColors": {
         "name": "Couleurs de statut",
         "description": "Change la couleur de chaque statut.",
+        "header": {
+          "labyStatuses": {
+            "name": "Statuts Laby"
+          },
+          "otherStatuses": {
+            "name": "Autres"
+          }
+        },
         "onlineColor": {
           "name": "En ligne"
         },
@@ -115,7 +155,56 @@
       "online": "est maintenant en ligne",
       "away": "est maintenant absent",
       "busy": "est maintenant occupé",
-      "offline": "s'est déconnecté"
+      "offline": "s'est déconnecté",
+      "joinedServer": "a rejoint ton serveur"
+    },
+    "status": {
+      "online": "En ligne",
+      "away": "Absent",
+      "busy": "Occupé",
+      "offline": "Hors ligne",
+      "invisible": "Apparaît hors ligne",
+      "profile_hidden": "Statut masqué sur laby.net",
+      "no_labymod": "Pas de compte LabyMod",
+      "unknown": "Statut encore inconnu"
+    },
+    "command": {
+      "summary": "%s joueurs dans la liste, %s avec un statut connu, %s utilisent StatusTag, %s en attente",
+      "notFound": "%s n'est pas dans la liste des joueurs.",
+      "source": {
+        "self": "ton propre statut",
+        "friend": "ami LabyChat",
+        "sync": "StatusTag Sync",
+        "api": "laby.net",
+        "cache": "enregistré plus tôt",
+        "none": "pas encore vérifié"
+      },
+      "age": {
+        "now": "à l'instant",
+        "minutes": "il y a %s min",
+        "hours": "il y a %s h",
+        "days": "il y a %s j"
+      },
+      "lastOnline": "vu %s",
+      "friends": {
+        "header": "Amis en ligne (%s) :",
+        "none": "Aucun de tes amis n'est en ligne.",
+        "notConnected": "Tu n'es pas connecté à LabyChat.",
+        "more": "et %s de plus"
+      }
+    },
+    "chat": {
+      "openProfile": "Clique pour ouvrir son profil laby.net"
+    },
+    "ownStatus": {
+      "changed": "Ton statut est maintenant %s"
+    },
+    "hudWidget": {
+      "status_overview": {
+        "name": "Aperçu des statuts",
+        "description": "Affiche combien de joueurs du serveur sont en ligne, absents, occupés ou hors ligne.",
+        "label": "Statuts"
+      }
     }
   }
 }
