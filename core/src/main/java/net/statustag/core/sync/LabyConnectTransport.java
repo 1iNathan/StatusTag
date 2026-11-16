@@ -3,6 +3,8 @@ package net.statustag.core.sync;
 import com.google.gson.JsonObject;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import net.labymod.api.Laby;
+import net.labymod.api.client.network.ClientPacketListener;
 import net.labymod.api.labyconnect.LabyConnectSession;
 import net.labymod.api.labyconnect.protocol.model.User;
 import net.statustag.core.status.StatusKind;
@@ -22,6 +24,12 @@ public final class LabyConnectTransport implements SyncTransport {
   public @Nullable StatusKind selfStatus() {
     User self = LabyConnectAccess.self();
     return self == null ? null : StatusKind.fromUserStatus(self.userStatus());
+  }
+
+  @Override
+  public boolean hasAudience() {
+    ClientPacketListener listener = Laby.labyAPI().minecraft().getClientPacketListener();
+    return listener != null && listener.getNetworkPlayerInfos().size() > 1;
   }
 
   @Override

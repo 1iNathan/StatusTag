@@ -1,7 +1,6 @@
 package net.statustag.core;
 
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 import net.labymod.api.Laby;
 import net.labymod.api.addon.LabyAddon;
 import net.labymod.api.client.entity.player.badge.PositionType;
@@ -74,8 +73,7 @@ public class StatusTagAddon extends LabyAddon<StatusTagConfiguration> {
         this.service,
         new LabyConnectTransport(),
         debug,
-        System::currentTimeMillis,
-        () -> ThreadLocalRandom.current().nextLong(150L, 1_201L)
+        () -> System.nanoTime() / 1_000_000L
     );
     instance = this;
 
@@ -118,7 +116,7 @@ public class StatusTagAddon extends LabyAddon<StatusTagConfiguration> {
 
     this.registerListener(new StatusListener(this.service, this.sync));
     this.registerListener(new ChatDotListener(config, this.service));
-    this.registerListener(new FriendNotificationListener(config, palette));
+    this.registerListener(new FriendNotificationListener(config, palette, debug));
     this.registerCommand(new StatusCommand(this.service, this.sync));
     this.registerListener(new StatusKeyListener(config, palette));
     this.labyAPI().hudWidgetRegistry().register(new StatusOverviewWidget(this.service));

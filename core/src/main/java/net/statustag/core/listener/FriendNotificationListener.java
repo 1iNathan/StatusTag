@@ -20,29 +20,36 @@ import net.labymod.api.util.concurrent.task.Task;
 import net.statustag.core.StatusTagConfiguration;
 import net.statustag.core.config.NotificationsConfig;
 import net.statustag.core.render.StatusPalette;
+import net.statustag.core.status.NoticeGate;
+import net.statustag.core.status.PresenceSettler;
 import net.statustag.core.status.StatusKind;
 import net.statustag.core.util.CurrentServer;
+import net.statustag.core.util.DebugLog;
 import net.statustag.core.util.ServerFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class FriendNotificationListener {
 
-  private static final long NATIVE_GRACE_MS = 750L;
-  private static final long NATIVE_MATCH_WINDOW_MS = 1_600L;
-  private static final long PRUNE_AFTER_MS = 10_000L;
-  private static final long JOIN_REPEAT_MS = 60_000L;
+  private static final long SETTLE_MS = 3_000L;
+  private static final long SETTLE_SLACK_MS = 50L;
+  private static final long OWN_FORGET_MS = 60_000L;
 
   private final StatusTagConfiguration config;
   private final StatusPalette palette;
-  private final Map<String, Long> foreignNoticeAt = new ConcurrentHashMap<>();
-  private final Map<UUID, Task> pending = new ConcurrentHashMap<>();
+  private final DebugLog debug;
+  private final PresenceSettler<Friend> settler = new PresenceSettler<>(SETTLE_MS);
+  private final NoticeGate gate = new NoticeGate();
   private final Map<Notification, Long> ownNotifications = new ConcurrentHashMap<>();
-  private final Map<UUID, Long> joinNoticeAt = new ConcurrentHashMap<>();
 
-  public FriendNotificationListener(@NotNull StatusTagConfiguration config, @NotNull StatusPalette palette) {
+  public FriendNotificationListener(
+      @NotNull StatusTagConfiguration config,
+      @NotNull StatusPalette palette,
+      @NotNull DebugLog debug
+  ) {
     this.config = config;
     this.palette = palette;
+    this.debug = debug;
   }
 
   @Subscribe
@@ -57,15 +64,14 @@ public final class FriendNotificationListener {
       return;
     }
 
-    long now = System.currentTimeMillis();
-    this.prune(now);
-    this.foreignNoticeAt.put(title.toLowerCase(Locale.ROOT), now);
+    long now = now();
+    this.ownNotifications.values().removeIf(at -> now - at >= OWN_FORGET_MS);
+    this.gate.foreignNotice(title, now);
   }
 
   @Subscribe
   public void onFriendStatus(LabyConnectFriendStatusEvent event) {
-    NotificationsConfig notifications = this.config.notifications();
-    if (!this.config.enabled().get() || !notifications.enabled().get()) {
+    if (!this.notificationsOn()) {
       return;
     }
 
@@ -78,48 +84,28 @@ public final class FriendNotificationListener {
       return;
     }
 
-    if (notifications.pinnedOnly().get() && !friend.isPinned()) {
+    if (this.config.notifications().pinnedOnly().get() && !friend.isPinned()) {
       return;
     }
 
-    StatusKind kind = StatusKind.fromUserStatus(event.getStatus());
-    if (kind == StatusKind.UNKNOWN) {
-      return;
-    }
+    this.settler.record(
+        friend.getUniqueId(),
+        friend,
+        StatusKind.fromUserStatus(event.getPreviousStatus()),
+        StatusKind.fromUserStatus(event.getStatus()),
+        now()
+    );
 
-    boolean cameOnline = !event.wasOnline() && event.isOnline();
-    boolean wentOffline = event.wasOnline() && !event.isOnline();
-    UUID uniqueId = friend.getUniqueId();
-
-    if (!cameOnline && !wentOffline) {
-      if (notifications.statusChange().get()) {
-        this.cancelPending(uniqueId);
-        this.push(friend, kind);
-      }
-      return;
-    }
-
-    if (cameOnline && !notifications.friendOnline().get() || wentOffline && !notifications.friendOffline().get()) {
-      return;
-    }
-
-    this.cancelPending(uniqueId);
-    String name = friend.getName();
-    Task task = Task.builder(() -> {
-      this.pending.remove(uniqueId);
-      if (!this.announcedByOthers(name)) {
-        this.push(friend, kind);
-      }
-    }).delay(NATIVE_GRACE_MS, TimeUnit.MILLISECONDS).build();
-
-    this.pending.put(uniqueId, task);
-    task.execute();
+    Task.builder(this::flush)
+        .delay(SETTLE_MS + SETTLE_SLACK_MS, TimeUnit.MILLISECONDS)
+        .build()
+        .execute();
   }
 
   @Subscribe
   public void onFriendServer(LabyConnectFriendServerEvent event) {
     NotificationsConfig notifications = this.config.notifications();
-    if (!this.config.enabled().get() || !notifications.enabled().get() || !notifications.friendJoinedServer().get()) {
+    if (!this.notificationsOn() || !notifications.friendJoinedServer().get()) {
       return;
     }
 
@@ -143,28 +129,56 @@ public final class FriendNotificationListener {
       return;
     }
 
-    UUID uniqueId = friend.getUniqueId();
-    long now = System.currentTimeMillis();
-    this.joinNoticeAt.values().removeIf(at -> now - at >= JOIN_REPEAT_MS);
-    if (this.joinNoticeAt.putIfAbsent(uniqueId, now) != null) {
+    if (!this.gate.claimJoin(friend.getUniqueId(), now())) {
       return;
     }
 
-    this.cancelPending(uniqueId);
     this.push(friend, Component.translatable("statustag.notify.joinedServer")
         .color(this.palette.textColor(StatusKind.ONLINE)));
   }
 
-  private void cancelPending(@NotNull UUID uniqueId) {
-    Task previous = this.pending.remove(uniqueId);
-    if (previous != null) {
-      previous.cancel();
+  private void flush() {
+    for (PresenceSettler.Settled<Friend> settled : this.settler.due(now())) {
+      String outcome;
+      try {
+        outcome = this.settle(settled);
+      } catch (RuntimeException exception) {
+        outcome = "failed " + exception;
+      }
+
+      if (this.debug.enabled()) {
+        this.debug.log("notify " + settled.id() + " " + settled.before() + " -> " + settled.after()
+            + " changes=" + settled.changes() + " " + outcome);
+      }
     }
   }
 
-  private boolean announcedByOthers(@NotNull String name) {
-    Long at = this.foreignNoticeAt.get(name.toLowerCase(Locale.ROOT));
-    return at != null && System.currentTimeMillis() - at <= NATIVE_MATCH_WINDOW_MS;
+  private @NotNull String settle(@NotNull PresenceSettler.Settled<Friend> settled) {
+    if (!this.notificationsOn()) {
+      return "disabled";
+    }
+
+    Friend friend = settled.subject();
+    String name = friend.getName();
+    if (name == null) {
+      return "unnamed";
+    }
+
+    NotificationsConfig notifications = this.config.notifications();
+    NoticeGate.Outcome outcome = this.gate.decide(settled, name, new NoticeGate.Toggles(
+        notifications.statusChange().get(),
+        notifications.friendOnline().get(),
+        notifications.friendOffline().get()
+    ));
+
+    if (outcome == NoticeGate.Outcome.PUSH) {
+      this.push(friend, settled.after());
+    }
+    return outcome.name().toLowerCase(Locale.ROOT);
+  }
+
+  private boolean notificationsOn() {
+    return this.config.enabled().get() && this.config.notifications().enabled().get();
   }
 
   private void push(@NotNull Friend friend, @NotNull StatusKind kind) {
@@ -179,7 +193,7 @@ public final class FriendNotificationListener {
         .type(Notification.Type.SOCIAL)
         .build();
 
-    this.ownNotifications.put(notification, System.currentTimeMillis());
+    this.ownNotifications.put(notification, now());
     Laby.labyAPI().notificationController().push(notification);
 
     if (friend.isPinned() && this.config.notifications().pinnedSound().get()) {
@@ -189,10 +203,8 @@ public final class FriendNotificationListener {
     }
   }
 
-  private void prune(long now) {
-    long cutoff = now - PRUNE_AFTER_MS;
-    this.foreignNoticeAt.values().removeIf(at -> at < cutoff);
-    this.ownNotifications.values().removeIf(at -> at < cutoff);
+  private static long now() {
+    return System.nanoTime() / 1_000_000L;
   }
 
   private static @Nullable String plainText(@Nullable Component component) {

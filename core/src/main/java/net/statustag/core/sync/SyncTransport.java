@@ -12,6 +12,8 @@ public interface SyncTransport {
 
   @Nullable StatusKind selfStatus();
 
+  boolean hasAudience();
+
   boolean broadcast(@NotNull String key, @NotNull JsonObject payload);
 
   boolean send(@NotNull String key, @NotNull UUID[] receivers, @NotNull JsonObject payload);

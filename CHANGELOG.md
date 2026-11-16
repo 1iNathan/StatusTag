@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.1
+
+Fewer friend notifications, and StatusTag Sync no longer runs into LabyConnect's message limit.
+
+- Friend notifications wait until a friend's status has stayed the same for 3 seconds. LabyChat often flickers between Online, Away and Offline while a friend's game reconnects. You now get one notification for where they end up, or none if they end up where they started.
+- When a friend joins your server, you get "joined your server" instead of "is now online" as well.
+- StatusTag Sync sends at most 3 messages per minute, at least 5 seconds apart, and counts the messages other addons send over LabyConnect, such as Spotify track sharing. LabyConnect limits these messages per account, which showed up as "Custom payload: Request failed: RATE_LIMITED".
+- If LabyConnect still rejects a message, Sync pauses for a minute, and longer if it happens again.
+- A new status is shared once it has stayed the same for 2 seconds, so switching through several statuses sends only the last one.
+- Clicking Clear Cache several times no longer sends a burst of messages.
+- Status announcements wait until other players are around.
+- Sync sends a heartbeat every 200 seconds and a full announcement every 10 minutes, about half as often as before. Still compatible with 1.0.0 and 1.1.0.
+
 ## 1.1.0
 
 Faster, lighter and more accurate.
