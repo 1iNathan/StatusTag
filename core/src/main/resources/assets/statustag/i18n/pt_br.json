@@ -66,11 +66,33 @@
           "name": "Amigo fica offline"
         },
         "statusChange": {
-          "name": "Amigo fica ausente ou ocupado"
+          "name": "Amigo muda de status",
+          "description": "Avisa quando um amigo que já está online alterna entre Online, Ausente e Ocupado."
         },
         "friendJoinedServer": {
           "name": "Amigo entra no seu servidor",
           "description": "Avisa quando um amigo entra no servidor em que você está jogando."
+        },
+        "onlineMessage": {
+          "name": "Mensagem: fica online",
+          "description": "Deixe vazio para usar o texto padrão. {status} é o novo status e {previous} o anterior. Códigos de cor como &8 funcionam."
+        },
+        "offlineMessage": {
+          "name": "Mensagem: fica offline",
+          "description": "Deixe vazio para usar o texto padrão. {status} é o novo status e {previous} o anterior. Códigos de cor como &8 funcionam."
+        },
+        "statusMessage": {
+          "name": "Mensagem: mudança de status",
+          "description": "Deixe vazio para usar o texto padrão. {status} é o novo status e {previous} o anterior. Códigos de cor como &8 funcionam."
+        },
+        "joinedMessage": {
+          "name": "Mensagem: entra no seu servidor",
+          "description": "Deixe vazio para usar o texto padrão. {status} é o status do amigo. Códigos de cor como &8 funcionam."
+        },
+        "header": {
+          "messages": {
+            "name": "Mensagens"
+          }
         }
       },
       "showPlayersWithoutLabyMod": {
@@ -156,7 +178,8 @@
       "away": "está ausente agora",
       "busy": "está ocupado agora",
       "offline": "ficou offline",
-      "joinedServer": "entrou no seu servidor"
+      "joinedServer": "entrou no seu servidor",
+      "was": "(antes: %s)"
     },
     "status": {
       "online": "Online",

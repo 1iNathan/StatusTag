@@ -48,6 +48,9 @@ public class StatusTagAddon extends LabyAddon<StatusTagConfiguration> {
     Laby.references().revisionRegistry().register(
         new SimpleRevision(NAMESPACE, new SemanticVersion(1, 1, 0), "2026-11-15")
     );
+    Laby.references().revisionRegistry().register(
+        new SimpleRevision(NAMESPACE, new SemanticVersion(1, 1, 2), "2026-11-17")
+    );
   }
 
   @Override
@@ -108,6 +111,8 @@ public class StatusTagAddon extends LabyAddon<StatusTagConfiguration> {
     config.useMesh().addChangeListener(enabled -> {
       if (enabled) {
         this.sync.requestResync();
+      } else {
+        this.service.forgetSynced();
       }
     });
 

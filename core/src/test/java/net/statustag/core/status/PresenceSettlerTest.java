@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
 class PresenceSettlerTest {
 
   private static final long QUIET = 3_000L;
-  private static final UUID FIRST = UUID.fromString("1de7e8da-e0c2-4550-8678-6d3d3a4bd670");
-  private static final UUID SECOND = UUID.fromString("bd4f27b2-69cc-41c3-a381-d6ead7483369");
+  private static final UUID FIRST = UUID.randomUUID();
+  private static final UUID SECOND = UUID.randomUUID();
 
   private final PresenceSettler<String> settler = new PresenceSettler<>(QUIET);
 

@@ -15,6 +15,7 @@ public final class StatusPalette {
   private final TextColor[] textColors = new TextColor[StatusKind.count()];
   private final Color[] chroma = new Color[StatusKind.count()];
   private final boolean[] hidden = new boolean[StatusKind.count()];
+  private int revision;
 
   public StatusPalette(@NotNull Function<StatusKind, Color> colors) {
     this.colors = colors;
@@ -30,6 +31,11 @@ public final class StatusPalette {
       this.textColors[ordinal] = null;
       this.chroma[ordinal] = color != null && color.isChroma() ? color : null;
     }
+    this.revision++;
+  }
+
+  public int revision() {
+    return this.revision;
   }
 
   public void setShowPlayersWithoutLabyMod(boolean show) {

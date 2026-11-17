@@ -1,0 +1,233 @@
+{
+  "statustag": {
+    "settings": {
+      "name": "StatusTag",
+      "enabled": {
+        "name": "Aktiviert"
+      },
+      "tabList": {
+        "name": "Tab-Liste",
+        "description": "Zeigt einen Status-Punkt neben den Spielernamen in der Tab-Liste an.",
+        "enabled": {
+          "name": "Aktiviert"
+        },
+        "dotSize": {
+          "name": "Punktgröße"
+        },
+        "badgeWidth": {
+          "name": "Badge-Breite",
+          "description": "Der reservierte Platz für den Punkt vor dem Spielernamen."
+        },
+        "dotOffset": {
+          "name": "Punkt-Position",
+          "description": "Verschiebt den Punkt nach links oder rechts."
+        }
+      },
+      "nameTag": {
+        "name": "Namensschilder",
+        "description": "Zeigt einen Status-Punkt neben dem Namen über den Köpfen der Spieler an.",
+        "enabled": {
+          "name": "Aktiviert"
+        },
+        "dotScale": {
+          "name": "Punktgröße",
+          "description": "Größe des Punktes neben dem Namen über den Köpfen der Spieler."
+        }
+      },
+      "chat": {
+        "name": "Chat",
+        "description": "Zeigt einen Status-Punkt vor Chat-Nachrichten an.",
+        "enabled": {
+          "name": "Aktiviert"
+        },
+        "detectSender": {
+          "name": "Absender am Namen erkennen",
+          "description": "Erkennt den Absender einer Nachricht an seinem Namen, wenn der Server ihn nicht mitsendet."
+        }
+      },
+      "notifications": {
+        "name": "Benachrichtigungen",
+        "description": "Werde benachrichtigt, wenn sich der Status eines Freundes ändert.",
+        "enabled": {
+          "name": "Aktiviert"
+        },
+        "pinnedOnly": {
+          "name": "Nur angepinnte Freunde",
+          "description": "Benachrichtigt dich nur über Freunde, die du in LabyChat angepinnt hast."
+        },
+        "pinnedSound": {
+          "name": "Ton für angepinnte Freunde",
+          "description": "Spielt einen Ton ab, wenn eine Benachrichtigung zu einem angepinnten Freund erscheint."
+        },
+        "friendOnline": {
+          "name": "Freund kommt online"
+        },
+        "friendOffline": {
+          "name": "Freund geht offline"
+        },
+        "statusChange": {
+          "name": "Freund ändert seinen Status",
+          "description": "Benachrichtigt dich, wenn ein Freund, der bereits online ist, zwischen Online, Abwesend und Beschäftigt wechselt."
+        },
+        "friendJoinedServer": {
+          "name": "Freund betritt deinen Server",
+          "description": "Benachrichtigt dich, wenn ein Freund den Server betritt, auf dem du gerade spielst."
+        },
+        "onlineMessage": {
+          "name": "Nachricht: kommt online",
+          "description": "Leer lassen für den Standardtext. {status} ist der neue Status, {previous} der vorherige. Farbcodes wie &8 funktionieren."
+        },
+        "offlineMessage": {
+          "name": "Nachricht: geht offline",
+          "description": "Leer lassen für den Standardtext. {status} ist der neue Status, {previous} der vorherige. Farbcodes wie &8 funktionieren."
+        },
+        "statusMessage": {
+          "name": "Nachricht: Statuswechsel",
+          "description": "Leer lassen für den Standardtext. {status} ist der neue Status, {previous} der vorherige. Farbcodes wie &8 funktionieren."
+        },
+        "joinedMessage": {
+          "name": "Nachricht: betritt deinen Server",
+          "description": "Leer lassen für den Standardtext. {status} ist der Status des Freundes. Farbcodes wie &8 funktionieren."
+        },
+        "header": {
+          "messages": {
+            "name": "Nachrichten"
+          }
+        }
+      },
+      "showPlayersWithoutLabyMod": {
+        "name": "Spieler ohne LabyMod",
+        "description": "Zeigt einen Punkt für Spieler, die kein LabyMod nutzen oder deren Status unbekannt ist."
+      },
+      "cycleStatusKey": {
+        "name": "Status wechseln",
+        "description": "Wechselt deinen LabyChat-Status zwischen Online, Abwesend und Beschäftigt."
+      },
+      "disabledServers": {
+        "name": "Deaktivierte Server",
+        "description": "Auf diesen Servern blendet StatusTag die Punkte aus. Gib eine Serveradresse ein und drücke Enter, zum Beispiel hypixel.net."
+      },
+      "header": {
+        "sources": {
+          "name": "Status-Quellen"
+        },
+        "advanced": {
+          "name": "Erweitert"
+        }
+      },
+      "useLabyChat": {
+        "name": "LabyChat-Freunde",
+        "description": "Zeigt den Live-Status deiner LabyChat-Freunde an."
+      },
+      "useLabyNetApi": {
+        "name": "laby.net",
+        "description": "Ruft Spielerstatus von laby.net ab. Verborgene Status bleiben verborgen."
+      },
+      "useMesh": {
+        "name": "StatusTag Sync",
+        "description": "Tauscht Status mit anderen Spielern aus, die dieses Addon nutzen."
+      },
+      "statusColors": {
+        "name": "Status-Farben",
+        "description": "Ändere die Farbe jedes Status.",
+        "header": {
+          "labyStatuses": {
+            "name": "Laby-Status"
+          },
+          "otherStatuses": {
+            "name": "Sonstige"
+          }
+        },
+        "onlineColor": {
+          "name": "Online"
+        },
+        "awayColor": {
+          "name": "Abwesend"
+        },
+        "busyColor": {
+          "name": "Beschäftigt"
+        },
+        "offlineColor": {
+          "name": "Offline"
+        },
+        "invisibleColor": {
+          "name": "Unsichtbar"
+        },
+        "profileHiddenColor": {
+          "name": "Verborgenes Profil"
+        },
+        "noLabyModColor": {
+          "name": "Kein LabyMod"
+        },
+        "unknownColor": {
+          "name": "Unbekannt"
+        }
+      },
+      "debugLogging": {
+        "name": "Debug-Protokoll",
+        "description": "Schreibt eine Log-Datei zur Fehlersuche. Lass diese Option deaktiviert, wenn du sie nicht brauchst."
+      },
+      "clearCache": {
+        "name": "Cache leeren",
+        "description": "Entfernt alle gespeicherten Status, damit sie neu abgerufen werden.",
+        "text": "Leeren"
+      }
+    },
+    "notify": {
+      "online": "ist jetzt online",
+      "away": "ist jetzt abwesend",
+      "busy": "ist jetzt beschäftigt",
+      "offline": "ist offline gegangen",
+      "joinedServer": "hat deinen Server betreten",
+      "was": "(war %s)"
+    },
+    "status": {
+      "online": "Online",
+      "away": "Abwesend",
+      "busy": "Beschäftigt",
+      "offline": "Offline",
+      "invisible": "Erscheint offline",
+      "profile_hidden": "Status auf laby.net verborgen",
+      "no_labymod": "Kein LabyMod-Konto",
+      "unknown": "Status noch unbekannt"
+    },
+    "command": {
+      "summary": "%s Spieler in der Tab-Liste, %s mit bekanntem Status, %s nutzen StatusTag, %s warten auf eine Abfrage",
+      "notFound": "%s ist nicht in der Tab-Liste.",
+      "source": {
+        "self": "dein eigener Status",
+        "friend": "LabyChat-Freund",
+        "sync": "StatusTag Sync",
+        "api": "laby.net",
+        "cache": "von vorhin gespeichert",
+        "none": "noch nicht abgefragt"
+      },
+      "age": {
+        "now": "gerade eben",
+        "minutes": "vor %s Min.",
+        "hours": "vor %s Std.",
+        "days": "vor %s Tagen"
+      },
+      "lastOnline": "zuletzt online %s",
+      "friends": {
+        "header": "Freunde online (%s):",
+        "none": "Keiner deiner Freunde ist online.",
+        "notConnected": "Du bist nicht mit LabyChat verbunden.",
+        "more": "und %s weitere"
+      }
+    },
+    "chat": {
+      "openProfile": "Klicke, um das laby.net-Profil zu öffnen"
+    },
+    "ownStatus": {
+      "changed": "Dein Status ist jetzt %s"
+    },
+    "hudWidget": {
+      "status_overview": {
+        "name": "Statusübersicht",
+        "description": "Zeigt, wie viele Spieler auf dem Server online, abwesend, beschäftigt oder offline sind.",
+        "label": "Status"
+      }
+    }
+  }
+}

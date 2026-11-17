@@ -24,6 +24,14 @@ class ChatSenderDetectorTest {
   }
 
   @Test
+  void findsSendersInDirectMessageFormats() {
+    assertEquals(STEVE, ChatSenderDetector.detect("PM \u00BB Steve \u2192 Alex_99 \u00BB hi", NAMES));
+    assertEquals(ALEX, ChatSenderDetector.detect("PM \u00BB Alex_99 \u2192 Steve \u00BB hi", NAMES));
+    assertEquals(STEVE, ChatSenderDetector.detect(" 5 \u2503 Guild Chat \u2503 Steve \u00BB hi", NAMES));
+    assertEquals(STEVE, ChatSenderDetector.detect("Steve \u203A hello", NAMES));
+  }
+
+  @Test
   void ignoresMentionsAndSystemMessages() {
     assertNull(ChatSenderDetector.detect("Steve joined the game", NAMES));
     assertNull(ChatSenderDetector.detect("Welcome back! Have fun", NAMES));

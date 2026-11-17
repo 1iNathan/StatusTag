@@ -66,11 +66,33 @@
           "name": "Friend Goes Offline"
         },
         "statusChange": {
-          "name": "Friend Becomes Away or Busy"
+          "name": "Friend Changes Status",
+          "description": "Notifies you when a friend who is already online switches between Online, Away and Busy."
         },
         "friendJoinedServer": {
           "name": "Friend Joins Your Server",
           "description": "Notifies you when a friend joins the server you're playing on."
+        },
+        "onlineMessage": {
+          "name": "Comes Online Message",
+          "description": "Leave empty for the default text. Use {status} for the new status and {previous} for the one before. Color codes like &8 work."
+        },
+        "offlineMessage": {
+          "name": "Goes Offline Message",
+          "description": "Leave empty for the default text. Use {status} for the new status and {previous} for the one before. Color codes like &8 work."
+        },
+        "statusMessage": {
+          "name": "Status Change Message",
+          "description": "Leave empty for the default text. Use {status} for the new status and {previous} for the one before. Color codes like &8 work."
+        },
+        "joinedMessage": {
+          "name": "Joins Your Server Message",
+          "description": "Leave empty for the default text. Use {status} for the friend's status. Color codes like &8 work."
+        },
+        "header": {
+          "messages": {
+            "name": "Messages"
+          }
         }
       },
       "showPlayersWithoutLabyMod": {
@@ -156,7 +178,8 @@
       "away": "is now away",
       "busy": "is now busy",
       "offline": "went offline",
-      "joinedServer": "joined your server"
+      "joinedServer": "joined your server",
+      "was": "(was %s)"
     },
     "status": {
       "online": "Online",

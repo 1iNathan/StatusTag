@@ -135,13 +135,18 @@ public final class StatusCommand extends Command {
       return;
     }
 
+    String shown = this.service.tabName(uniqueId);
+    if (shown == null) {
+      shown = name;
+    }
+
     StatusEntry entry = this.service.entry(uniqueId);
     StatusKind kind = entry == null ? StatusKind.UNKNOWN : entry.kind();
     String sourceKey = entry == null ? "none" : entry.source().name().toLowerCase(Locale.ROOT);
 
     long now = System.currentTimeMillis();
     Component details = Component.translatable("statustag.command.source." + sourceKey, NamedTextColor.GRAY);
-    if (entry != null && entry.updatedAt() > 0L) {
+    if (entry != null && entry.updatedAt() > 0L && !entry.source().isLive()) {
       details = Component.empty()
           .append(details)
           .append(Component.text(", ", NamedTextColor.GRAY))
@@ -161,7 +166,7 @@ public final class StatusCommand extends Command {
 
     this.displayMessage(Component.empty()
         .append(this.dot(kind))
-        .append(Component.text(" " + name + " ", NamedTextColor.WHITE))
+        .append(Component.text(" " + shown + " ", NamedTextColor.WHITE))
         .append(this.label(kind))
         .append(Component.text(" (", NamedTextColor.GRAY))
         .append(details)

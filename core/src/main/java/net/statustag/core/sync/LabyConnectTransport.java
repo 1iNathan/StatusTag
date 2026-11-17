@@ -33,6 +33,12 @@ public final class LabyConnectTransport implements SyncTransport {
   }
 
   @Override
+  public boolean inTabList(@NotNull UUID uniqueId) {
+    ClientPacketListener listener = Laby.labyAPI().minecraft().getClientPacketListener();
+    return listener != null && listener.getNetworkPlayerInfo(uniqueId) != null;
+  }
+
+  @Override
   public boolean broadcast(@NotNull String key, @NotNull JsonObject payload) {
     LabyConnectSession session = LabyConnectAccess.session();
     if (session == null) {

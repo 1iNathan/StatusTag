@@ -2,7 +2,6 @@ package net.statustag.core.status;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +41,7 @@ public final class StatusService implements FetchHost {
   private static final long LIST_REFRESH_THROTTLE_MS = 250L;
   private static final long REQUEST_WINDOW_MS = 2L * StatusPolicy.MINUTE_MS;
   private static final int MAX_REQUESTED = 1_024;
+  static final long REFRESH_AHEAD_MS = StatusPolicy.MINUTE_MS;
 
   private final StatusSettings config;
   private final StatusStore store;
@@ -50,8 +50,10 @@ public final class StatusService implements FetchHost {
   private final FetchScheduler scheduler;
   private final Set<UUID> tabPlayers = ConcurrentHashMap.newKeySet();
   private final Map<String, UUID> tabNames = new ConcurrentHashMap<>();
+  private final Map<UUID, String> tabDisplayNames = new ConcurrentHashMap<>();
   private final Set<UUID> labyModUsers = ConcurrentHashMap.newKeySet();
   private final Map<UUID, Long> requested = new ConcurrentHashMap<>();
+  private final Map<UUID, Long> unlisted = new ConcurrentHashMap<>();
   private final Map<UUID, Long> lastOnline = new ConcurrentHashMap<>();
   private final AtomicBoolean saving = new AtomicBoolean();
 
@@ -203,8 +205,43 @@ public final class StatusService implements FetchHost {
 
   @Override
   public void applyLookup(@NotNull UUID uniqueId, @NotNull StatusKind kind, long now) {
+    this.unlisted.remove(uniqueId);
     this.requested.remove(uniqueId);
     this.commit(uniqueId, kind, StatusSource.API, now);
+  }
+
+  @Override
+  public void applyUnlisted(@NotNull UUID uniqueId, long now) {
+    this.applyLookup(uniqueId, StatusKind.NO_LABYMOD, now);
+    if (this.unlisted.size() >= MAX_REQUESTED) {
+      this.unlisted.clear();
+    }
+    this.unlisted.put(uniqueId, now);
+    if (this.labyModUsers.contains(uniqueId) && this.unlisted.remove(uniqueId) != null) {
+      this.commit(uniqueId, StatusKind.PROFILE_HIDDEN, StatusSource.API, now);
+    }
+  }
+
+  @Override
+  public @NotNull List<UUID> dueSoon(long now, int limit) {
+    if (limit <= 0 || !this.lookupsEnabled()) {
+      return List.of();
+    }
+
+    UUID self = this.selfId;
+    List<UUID> soon = new ArrayList<>();
+    for (UUID uniqueId : this.tabPlayers) {
+      if (uniqueId.equals(self) || !StatusPolicy.isLookupCandidate(uniqueId)) {
+        continue;
+      }
+      if (StatusPolicy.refreshesWithin(this.store.get(uniqueId), now, REFRESH_AHEAD_MS)) {
+        soon.add(uniqueId);
+        if (soon.size() >= limit) {
+          break;
+        }
+      }
+    }
+    return soon;
   }
 
   @Override
@@ -244,6 +281,7 @@ public final class StatusService implements FetchHost {
     if (tick % TAB_REBUILD_INTERVAL_TICKS == 0) {
       this.rebuildTabPlayers();
       this.requested.values().removeIf(at -> now - at >= REQUEST_WINDOW_MS);
+      this.unlisted.values().removeIf(at -> now - at >= REQUEST_WINDOW_MS);
     }
     if (tick % SCAN_INTERVAL_TICKS == 0) {
       this.refreshSuppression(CurrentServer.host());
@@ -327,29 +365,35 @@ public final class StatusService implements FetchHost {
     Collection<NetworkPlayerInfo> infos = listener.getNetworkPlayerInfos();
     Set<UUID> current = new HashSet<>(Math.max(16, infos.size() * 2));
     Map<String, UUID> names = new HashMap<>(Math.max(16, infos.size() * 2));
+    Map<UUID, String> display = new HashMap<>(Math.max(16, infos.size() * 2));
     for (NetworkPlayerInfo info : infos) {
       GameProfile profile = info.profile();
       current.add(profile.getUniqueId());
       String name = profile.getUsername();
       if (name != null) {
         names.put(name.toLowerCase(Locale.ROOT), profile.getUniqueId());
+        display.put(profile.getUniqueId(), name);
       }
     }
     this.tabPlayers.retainAll(current);
     this.tabPlayers.addAll(current);
     this.tabNames.keySet().retainAll(names.keySet());
     this.tabNames.putAll(names);
+    this.tabDisplayNames.keySet().retainAll(current);
+    this.tabDisplayNames.putAll(display);
   }
 
   public void onTabAdd(@NotNull UUID uniqueId, @Nullable String name) {
     this.tabPlayers.add(uniqueId);
     if (name != null) {
       this.tabNames.put(name.toLowerCase(Locale.ROOT), uniqueId);
+      this.tabDisplayNames.put(uniqueId, name);
     }
   }
 
   public void onTabRemove(@NotNull UUID uniqueId, @Nullable String name) {
     this.tabPlayers.remove(uniqueId);
+    this.tabDisplayNames.remove(uniqueId);
     if (name != null) {
       this.tabNames.remove(name.toLowerCase(Locale.ROOT), uniqueId);
     }
@@ -363,18 +407,22 @@ public final class StatusService implements FetchHost {
     return this.tabNames.get(name.toLowerCase(Locale.ROOT));
   }
 
+  public @Nullable String tabName(@NotNull UUID uniqueId) {
+    return this.tabDisplayNames.get(uniqueId);
+  }
+
   public @NotNull List<String> completeTabName(@NotNull String prefix) {
     String lower = prefix.toLowerCase(Locale.ROOT);
     List<String> matches = new ArrayList<>();
-    for (String name : this.tabNames.keySet()) {
-      if (name.startsWith(lower)) {
-        matches.add(name);
+    for (Map.Entry<String, UUID> entry : this.tabNames.entrySet()) {
+      if (entry.getKey().startsWith(lower)) {
+        matches.add(this.tabDisplayNames.getOrDefault(entry.getValue(), entry.getKey()));
         if (matches.size() >= 50) {
           break;
         }
       }
     }
-    Collections.sort(matches);
+    matches.sort(String.CASE_INSENSITIVE_ORDER);
     return matches;
   }
 
@@ -406,8 +454,10 @@ public final class StatusService implements FetchHost {
     this.suppressed = false;
     this.tabPlayers.clear();
     this.tabNames.clear();
+    this.tabDisplayNames.clear();
     this.labyModUsers.clear();
     this.requested.clear();
+    this.unlisted.clear();
     this.scheduler.clear();
     this.saveAsync();
   }
@@ -415,6 +465,16 @@ public final class StatusService implements FetchHost {
   public void onLabyModUser(@NotNull UUID uniqueId) {
     if (!this.labyModUsers.add(uniqueId)) {
       return;
+    }
+
+    long now = System.currentTimeMillis();
+    Long unlistedAt = this.unlisted.remove(uniqueId);
+    if (unlistedAt != null && now - unlistedAt < REQUEST_WINDOW_MS) {
+      StatusEntry entry = this.store.get(uniqueId);
+      if (entry != null && entry.kind() == StatusKind.NO_LABYMOD && !entry.source().isLive()) {
+        this.commit(uniqueId, StatusKind.PROFILE_HIDDEN, StatusSource.API, now);
+        return;
+      }
     }
 
     StatusEntry updated = this.store.compute(uniqueId, (key, entry) ->
@@ -441,15 +501,24 @@ public final class StatusService implements FetchHost {
   }
 
   public void syncSelf() {
-    User self = LabyConnectAccess.self();
-    if (self == null) {
-      return;
+    LabyConnectSession session = LabyConnectAccess.session();
+    User self = session == null ? null : session.self();
+    if (self != null && this.applySelf(self.getUniqueId(), StatusKind.fromUserStatus(self.userStatus()))) {
+      this.syncFriends(session);
     }
+  }
 
-    this.selfId = self.getUniqueId();
-    if (this.config.isLabyChatEnabled()) {
-      this.commit(self.getUniqueId(), StatusKind.fromUserStatus(self.userStatus()), StatusSource.SELF);
+  boolean applySelf(@NotNull UUID uniqueId, @NotNull StatusKind kind) {
+    UUID previous = this.selfId;
+    boolean switched = previous != null && !previous.equals(uniqueId);
+    this.selfId = uniqueId;
+    if (switched) {
+      this.demoteLive();
     }
+    if (this.config.isActive()) {
+      this.commit(uniqueId, kind, StatusSource.SELF);
+    }
+    return switched;
   }
 
   public void syncSession() {
@@ -458,7 +527,14 @@ public final class StatusService implements FetchHost {
       return;
     }
 
-    this.syncSelf();
+    User self = session.self();
+    if (self != null) {
+      this.applySelf(self.getUniqueId(), StatusKind.fromUserStatus(self.userStatus()));
+    }
+    this.syncFriends(session);
+  }
+
+  private void syncFriends(@NotNull LabyConnectSession session) {
     if (!this.config.isLabyChatEnabled()) {
       return;
     }
@@ -483,10 +559,22 @@ public final class StatusService implements FetchHost {
     this.listRefreshRequested = true;
   }
 
+  public void forgetSynced() {
+    this.store.replaceAll((uniqueId, entry) -> entry.source() == StatusSource.SYNC ? entry.asCache() : entry);
+  }
+
+  public void onLabyConnectLost() {
+    long now = System.currentTimeMillis();
+    this.store.replaceAll((uniqueId, entry) ->
+        entry.source().isLive() ? entry.asCache().withCheckedAt(now) : entry);
+    this.listRefreshRequested = true;
+  }
+
   public void clearCache() {
     this.store.clear();
     this.lastOnline.clear();
     this.requested.clear();
+    this.unlisted.clear();
     this.scheduler.clear();
     this.syncSession();
     this.listRefreshRequested = true;

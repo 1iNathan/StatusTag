@@ -47,12 +47,20 @@ class LookupResultTest {
   }
 
   @Test
-  void readsCodesFromErrorMessages() {
-    assertEquals(429, LabyNetClient.codeFromMessage("429 Too Many Requests"));
-    assertEquals(403, LabyNetClient.codeFromMessage("Forbidden"));
-    assertEquals(404, LabyNetClient.codeFromMessage("Not Found"));
-    assertEquals(401, LabyNetClient.codeFromMessage("Unauthorized"));
-    assertEquals(LookupResult.NETWORK_ERROR, LabyNetClient.codeFromMessage("connect timed out"));
-    assertEquals(LookupResult.NETWORK_ERROR, LabyNetClient.codeFromMessage(null));
+  void takesErrorCodesFromTheResponse() {
+    assertEquals(403, LabyNetClient.errorCode(403, 200));
+    assertEquals(404, LabyNetClient.errorCode(-1, 404));
+    assertEquals(LookupResult.NETWORK_ERROR, LabyNetClient.errorCode(-1, 200));
+    assertEquals(LookupResult.NETWORK_ERROR, LabyNetClient.errorCode(-1, -1));
+  }
+
+  @Test
+  void readsRetryAfterAsSecondsOrTimestamp() {
+    long now = 1_794_500_000_000L;
+    assertEquals(30_000L, LabyNetClient.retryAfterMs(30L, now));
+    assertEquals(3_600_000L, LabyNetClient.retryAfterMs(3_600L, now));
+    assertEquals(5_000L, LabyNetClient.retryAfterMs(now + 5_000L, now));
+    assertEquals(0L, LabyNetClient.retryAfterMs(now - 1L, now));
+    assertEquals(0L, LabyNetClient.retryAfterMs(-1L, now));
   }
 }

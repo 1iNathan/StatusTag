@@ -10,6 +10,7 @@ import net.labymod.api.event.client.network.playerinfo.PlayerInfoAddEvent;
 import net.labymod.api.event.client.network.playerinfo.PlayerInfoRemoveEvent;
 import net.labymod.api.event.client.network.server.ServerDisconnectEvent;
 import net.labymod.api.event.client.network.server.ServerJoinEvent;
+import net.labymod.api.event.client.network.server.SubServerSwitchEvent;
 import net.labymod.api.event.labymod.labyconnect.session.LabyConnectBroadcastEvent;
 import net.labymod.api.event.labymod.labyconnect.session.LabyConnectConnectEvent;
 import net.labymod.api.event.labymod.labyconnect.session.LabyConnectDisconnectEvent;
@@ -60,6 +61,12 @@ public final class StatusListener {
   }
 
   @Subscribe
+  public void onSubServerSwitch(SubServerSwitchEvent event) {
+    this.service.onServerJoin();
+    this.sync.requestResync();
+  }
+
+  @Subscribe
   public void onServerDisconnect(ServerDisconnectEvent event) {
     this.service.onServerDisconnect();
   }
@@ -94,7 +101,7 @@ public final class StatusListener {
 
   @Subscribe
   public void onLabyConnectDisconnect(LabyConnectDisconnectEvent event) {
-    this.service.demoteLive();
+    this.service.onLabyConnectLost();
   }
 
   @Subscribe

@@ -1,5 +1,6 @@
 package net.statustag.core.status;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,6 +50,48 @@ class StatusPolicyTest {
   @Test
   void uncheckedCacheEntriesNeedLookup() {
     assertTrue(StatusPolicy.needsFetch(new StatusEntry(StatusKind.ONLINE, StatusSource.CACHE, NOW, 0L), NOW));
+  }
+
+  @Test
+  void asCacheKeepsTheCheckTimeOnlyForLookups() {
+    StatusEntry api = entry(StatusKind.OFFLINE, StatusSource.API, StatusPolicy.MINUTE_MS);
+    assertEquals(api.checkedAt(), api.asCache().checkedAt());
+    assertEquals(StatusSource.CACHE, api.asCache().source());
+    assertFalse(StatusPolicy.needsFetch(api.asCache(), NOW));
+
+    StatusEntry friend = entry(StatusKind.BUSY, StatusSource.FRIEND, StatusPolicy.MINUTE_MS);
+    assertEquals(0L, friend.asCache().checkedAt());
+    assertEquals(friend.updatedAt(), friend.asCache().updatedAt());
+    assertTrue(StatusPolicy.needsFetch(friend.asCache(), NOW));
+
+    StatusEntry sync = entry(StatusKind.AWAY, StatusSource.SYNC, StatusPolicy.MINUTE_MS);
+    assertEquals(0L, sync.asCache().checkedAt());
+    assertTrue(StatusPolicy.needsFetch(sync.asCache(), NOW));
+  }
+
+  @Test
+  void refreshesWithinOnlyForLookupsAboutToExpire() {
+    long ahead = StatusPolicy.MINUTE_MS;
+    long refresh = StatusPolicy.refreshAfterMs(StatusKind.OFFLINE);
+    assertTrue(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.API, refresh - 59_000L), NOW, ahead));
+    assertTrue(StatusPolicy.refreshesWithin(entry(StatusKind.INVISIBLE, StatusSource.CACHE, refresh - 59_000L), NOW, ahead));
+    assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.API, refresh - 61_000L), NOW, ahead));
+    assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.API, refresh), NOW, ahead));
+    assertFalse(StatusPolicy.refreshesWithin(new StatusEntry(StatusKind.OFFLINE, StatusSource.CACHE, NOW, 0L), NOW, ahead));
+    assertFalse(StatusPolicy.refreshesWithin(null, NOW, ahead));
+  }
+
+  @Test
+  void refreshesWithinIgnoresLiveSyncAndPresence() {
+    long ahead = StatusPolicy.MINUTE_MS;
+    assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.FRIEND, StatusPolicy.DAY_MS), NOW, ahead));
+    assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.BUSY, StatusSource.SELF, StatusPolicy.DAY_MS), NOW, ahead));
+    assertFalse(StatusPolicy.refreshesWithin(
+        entry(StatusKind.AWAY, StatusSource.SYNC, StatusPolicy.SYNC_FRESH_MS - 30_000L), NOW, ahead));
+    for (StatusKind kind : new StatusKind[] {StatusKind.ONLINE, StatusKind.AWAY, StatusKind.BUSY}) {
+      long refresh = StatusPolicy.refreshAfterMs(kind);
+      assertFalse(StatusPolicy.refreshesWithin(entry(kind, StatusSource.API, refresh - 30_000L), NOW, ahead));
+    }
   }
 
   @Test

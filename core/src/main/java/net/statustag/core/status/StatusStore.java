@@ -27,7 +27,7 @@ public final class StatusStore {
 
   static final int FORMAT_VERSION = 2;
   static final int MAX_ENTRIES = 5_000;
-  static final long SAVE_DELAY_MS = 5_000L;
+  static final long SAVE_DELAY_MS = 60_000L;
 
   private final ConcurrentHashMap<UUID, StatusEntry> entries = new ConcurrentHashMap<>(512);
   private final Path file;

@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class NoticeGate {
 
@@ -16,6 +17,8 @@ public final class NoticeGate {
 
   private final Map<UUID, Long> joinedAt = new HashMap<>();
   private final Map<String, Long> foreignAt = new HashMap<>();
+  private final Map<String, Long> nativeOnlineAt = new HashMap<>();
+  private final Map<String, Long> nativeOfflineAt = new HashMap<>();
 
   public synchronized boolean claimJoin(@NotNull UUID id, long now) {
     this.prune(now);
@@ -31,6 +34,29 @@ public final class NoticeGate {
   public synchronized void foreignNotice(@NotNull String title, long now) {
     this.prune(now);
     this.foreignAt.put(key(title), now);
+  }
+
+  public synchronized void nativeNotice(@NotNull String title, boolean online, long now) {
+    this.prune(now);
+    (online ? this.nativeOnlineAt : this.nativeOfflineAt).put(key(title), now);
+  }
+
+  public synchronized @Nullable Long nativeOffset(
+      @NotNull String name,
+      @NotNull PresenceSettler.Change change,
+      long startedAt
+  ) {
+    Map<String, Long> seen = switch (change) {
+      case CAME_ONLINE -> this.nativeOnlineAt;
+      case WENT_OFFLINE -> this.nativeOfflineAt;
+      default -> null;
+    };
+    if (seen == null) {
+      return null;
+    }
+
+    Long at = seen.get(key(name));
+    return at == null ? null : at - startedAt;
   }
 
   public synchronized @NotNull Outcome decide(
@@ -49,14 +75,18 @@ public final class NoticeGate {
         if (joined != null && joined >= settled.startedAt() - JOIN_COVER_MS) {
           yield Outcome.JOINED;
         }
-        yield this.shownByOthers(name, settled.lastAt()) ? Outcome.FOREIGN : Outcome.PUSH;
+        yield this.shownByOthers(name, settled.lastAt())
+            || this.shownByLabyMod(this.nativeOnlineAt, name, settled.startedAt())
+            ? Outcome.FOREIGN : Outcome.PUSH;
       }
       case WENT_OFFLINE -> {
         this.joinedAt.remove(settled.id());
         if (!toggles.wentOffline()) {
           yield Outcome.OFF;
         }
-        yield this.shownByOthers(name, settled.lastAt()) ? Outcome.FOREIGN : Outcome.PUSH;
+        yield this.shownByOthers(name, settled.lastAt())
+            || this.shownByLabyMod(this.nativeOfflineAt, name, settled.startedAt())
+            ? Outcome.FOREIGN : Outcome.PUSH;
       }
     };
   }
@@ -66,9 +96,16 @@ public final class NoticeGate {
     return at != null && at >= lastAt - FOREIGN_BEFORE_MS && at <= lastAt + FOREIGN_AFTER_MS;
   }
 
+  private boolean shownByLabyMod(@NotNull Map<String, Long> seen, @NotNull String name, long startedAt) {
+    Long at = seen.get(key(name));
+    return at != null && at >= startedAt;
+  }
+
   private void prune(long now) {
     this.joinedAt.values().removeIf(at -> now - at >= FORGET_AFTER_MS);
     this.foreignAt.values().removeIf(at -> now - at >= FORGET_AFTER_MS);
+    this.nativeOnlineAt.values().removeIf(at -> now - at >= FORGET_AFTER_MS);
+    this.nativeOfflineAt.values().removeIf(at -> now - at >= FORGET_AFTER_MS);
   }
 
   private static @NotNull String key(@NotNull String name) {

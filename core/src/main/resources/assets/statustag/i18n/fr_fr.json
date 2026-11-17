@@ -66,11 +66,33 @@
           "name": "Un ami se déconnecte"
         },
         "statusChange": {
-          "name": "Un ami devient absent ou occupé"
+          "name": "Un ami change de statut",
+          "description": "Te prévient quand un ami déjà connecté passe d'un statut à l'autre : En ligne, Absent ou Occupé."
         },
         "friendJoinedServer": {
           "name": "Un ami rejoint ton serveur",
           "description": "Te prévient quand un ami rejoint le serveur sur lequel tu joues."
+        },
+        "onlineMessage": {
+          "name": "Message : se connecte",
+          "description": "Laisse vide pour le texte par défaut. {status} est le nouveau statut, {previous} le précédent. Les codes couleur comme &8 fonctionnent."
+        },
+        "offlineMessage": {
+          "name": "Message : se déconnecte",
+          "description": "Laisse vide pour le texte par défaut. {status} est le nouveau statut, {previous} le précédent. Les codes couleur comme &8 fonctionnent."
+        },
+        "statusMessage": {
+          "name": "Message : changement de statut",
+          "description": "Laisse vide pour le texte par défaut. {status} est le nouveau statut, {previous} le précédent. Les codes couleur comme &8 fonctionnent."
+        },
+        "joinedMessage": {
+          "name": "Message : rejoint ton serveur",
+          "description": "Laisse vide pour le texte par défaut. {status} est le statut de l'ami. Les codes couleur comme &8 fonctionnent."
+        },
+        "header": {
+          "messages": {
+            "name": "Messages"
+          }
         }
       },
       "showPlayersWithoutLabyMod": {
@@ -156,7 +178,8 @@
       "away": "est maintenant absent",
       "busy": "est maintenant occupé",
       "offline": "s'est déconnecté",
-      "joinedServer": "a rejoint ton serveur"
+      "joinedServer": "a rejoint ton serveur",
+      "was": "(avant : %s)"
     },
     "status": {
       "online": "En ligne",

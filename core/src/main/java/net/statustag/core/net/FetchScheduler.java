@@ -151,6 +151,10 @@ public final class FetchScheduler {
         return;
       }
 
+      if (bulk && batch.size() < BULK_SIZE) {
+        this.topUp(batch, now);
+      }
+
       long requestId = this.nextRequestId++;
       long dispatchGeneration = this.generation;
       this.activeRequest = requestId;
@@ -183,6 +187,18 @@ public final class FetchScheduler {
       }
     }
     return batch;
+  }
+
+  private void topUp(@NotNull List<UUID> batch, long now) {
+    Set<UUID> taken = new HashSet<>(batch);
+    for (UUID uniqueId : this.host.dueSoon(now, BULK_SIZE - batch.size())) {
+      if (batch.size() >= BULK_SIZE) {
+        return;
+      }
+      if (!this.queued.contains(uniqueId) && !this.inFlight.contains(uniqueId) && taken.add(uniqueId)) {
+        batch.add(uniqueId);
+      }
+    }
   }
 
   private @Nullable UUID poll() {
@@ -233,6 +249,14 @@ public final class FetchScheduler {
     return kind == null && result.code() == 200 ? StatusKind.UNKNOWN : kind;
   }
 
+  private void apply(@NotNull UUID uniqueId, @NotNull StatusKind kind, @NotNull LookupResult result, long now) {
+    if (kind == StatusKind.NO_LABYMOD && result.code() == LookupResult.NOT_LISTED) {
+      this.host.applyUnlisted(uniqueId, now);
+    } else {
+      this.host.applyLookup(uniqueId, kind, now);
+    }
+  }
+
   void complete(@NotNull UUID uniqueId, @NotNull LookupResult result, long requestId, long dispatchGeneration) {
     long now = this.clock.getAsLong();
     StatusKind kind = null;
@@ -256,7 +280,7 @@ public final class FetchScheduler {
     }
 
     if (kind != null) {
-      this.host.applyLookup(uniqueId, kind, now);
+      this.apply(uniqueId, kind, result, now);
       if (result.lastOnline() > 0L) {
         this.host.recordLastOnline(uniqueId, result.lastOnline());
       }
@@ -287,8 +311,15 @@ public final class FetchScheduler {
       for (UUID uniqueId : batch) {
         LookupResult entry = entries.get(uniqueId);
         StatusKind kind = entry == null ? null : this.interpret(uniqueId, entry);
+        if (this.debug.enabled() && entry != null) {
+          this.debug.log("entry " + uniqueId + " code=" + entry.code() + " status=" + entry.status()
+              + " online=" + entry.online()
+              + " lastOnline=" + (entry.lastOnline() > 0L ? (now - entry.lastOnline()) / 1_000L + "s" : "none")
+              + " labymod=" + this.host.isKnownLabyModUser(uniqueId) + " tab=" + this.host.isOnTab(uniqueId)
+              + " kind=" + kind);
+        }
         if (kind != null) {
-          this.host.applyLookup(uniqueId, kind, now);
+          this.apply(uniqueId, kind, entry, now);
           if (entry.lastOnline() > 0L) {
             this.host.recordLastOnline(uniqueId, entry.lastOnline());
           }

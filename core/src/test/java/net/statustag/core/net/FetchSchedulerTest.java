@@ -28,6 +28,9 @@ class FetchSchedulerTest {
     final Map<UUID, Long> lastOnline = new HashMap<>();
     final Set<UUID> resolved = new HashSet<>();
     final Set<UUID> onTab = new HashSet<>();
+    final Set<UUID> unlisted = new HashSet<>();
+    final List<UUID> soon = new ArrayList<>();
+    int soonLimit = -1;
     String token = "jwt";
     boolean enabled = true;
 
@@ -43,7 +46,19 @@ class FetchSchedulerTest {
 
     @Override
     public boolean needsLookup(@NotNull UUID uniqueId, long now) {
-      return !this.resolved.contains(uniqueId);
+      return !this.resolved.contains(uniqueId) && !this.soon.contains(uniqueId);
+    }
+
+    @Override
+    public @NotNull List<UUID> dueSoon(long now, int limit) {
+      this.soonLimit = limit;
+      return this.soon.subList(0, Math.min(limit, this.soon.size()));
+    }
+
+    @Override
+    public void applyUnlisted(@NotNull UUID uniqueId, long now) {
+      this.unlisted.add(uniqueId);
+      this.applyLookup(uniqueId, StatusKind.NO_LABYMOD, now);
     }
 
     @Override
@@ -381,6 +396,118 @@ class FetchSchedulerTest {
 
     assertEquals(10, this.scheduler.size());
     assertEquals(9_000L, this.scheduler.limiter().waitMs(this.clock[0]));
+  }
+
+  @Test
+  void bulkReportsOmittedPlayersAsUnlisted() {
+    this.scheduler.disableBulkUntil(0L);
+    List<UUID> ids = this.enqueueMany(2);
+    this.scheduler.tick(this.clock[0]);
+    Map<UUID, LookupResult> entries = new HashMap<>();
+    entries.put(ids.get(0), new LookupResult(LookupResult.NOT_LISTED, null, false, 0L, -1, -1L));
+    entries.put(ids.get(1), new LookupResult(404, null, false, 0L, -1, -1L));
+    this.lookup.bulkCallbacks.get(0).accept(new BulkLookupResult(200, entries, 0L, -1, -1L));
+
+    assertEquals(StatusKind.NO_LABYMOD, this.host.applied.get(ids.get(0)));
+    assertEquals(StatusKind.NO_LABYMOD, this.host.applied.get(ids.get(1)));
+    assertEquals(Set.of(ids.get(0)), this.host.unlisted);
+  }
+
+  @Test
+  void singleMissingAccountIsNotReportedAsUnlisted() {
+    UUID a = UUID.randomUUID();
+    this.scheduler.enqueue(a, false);
+    this.scheduler.tick(this.clock[0]);
+    this.lookup.answer(0, 404, null);
+
+    assertEquals(StatusKind.NO_LABYMOD, this.host.applied.get(a));
+    assertTrue(this.host.unlisted.isEmpty());
+  }
+
+  @Test
+  void bulkRequestCarriesPlayersDueSoon() {
+    this.scheduler.disableBulkUntil(0L);
+    List<UUID> due = this.enqueueMany(1);
+    UUID first = UUID.randomUUID();
+    UUID second = UUID.randomUUID();
+    this.host.soon.addAll(List.of(first, second));
+    this.scheduler.tick(this.clock[0]);
+
+    assertEquals(List.of(List.of(due.get(0), first, second)), this.lookup.bulkRequests);
+    assertEquals(FetchScheduler.BULK_SIZE - 1, this.host.soonLimit);
+  }
+
+  @Test
+  void playersDueSoonAloneStartNoRequest() {
+    this.scheduler.disableBulkUntil(0L);
+    this.host.soon.add(UUID.randomUUID());
+    this.scheduler.tick(this.clock[0]);
+
+    UUID resolved = UUID.randomUUID();
+    this.host.resolved.add(resolved);
+    this.scheduler.enqueue(resolved, false);
+    this.scheduler.tick(this.clock[0]);
+
+    assertTrue(this.lookup.bulkRequests.isEmpty());
+    assertTrue(this.lookup.requested.isEmpty());
+  }
+
+  @Test
+  void singleLookupsIgnorePlayersDueSoon() {
+    UUID due = UUID.randomUUID();
+    this.host.soon.add(UUID.randomUUID());
+    this.scheduler.enqueue(due, false);
+    this.scheduler.tick(this.clock[0]);
+
+    assertEquals(List.of(due), this.lookup.requested);
+    assertTrue(this.lookup.bulkRequests.isEmpty());
+    assertEquals(-1, this.host.soonLimit);
+  }
+
+  @Test
+  void topUpNeverExceedsBulkSize() {
+    this.scheduler.disableBulkUntil(0L);
+    List<UUID> due = this.enqueueMany(FetchScheduler.BULK_SIZE - 1);
+    List<UUID> soon = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      soon.add(UUID.randomUUID());
+    }
+    this.host.soon.addAll(soon);
+    this.scheduler.tick(this.clock[0]);
+
+    List<UUID> sent = this.lookup.bulkRequests.get(0);
+    assertEquals(FetchScheduler.BULK_SIZE, sent.size());
+    assertTrue(sent.containsAll(due));
+    assertEquals(soon.get(0), sent.get(FetchScheduler.BULK_SIZE - 1));
+  }
+
+  @Test
+  void topUpSkipsPlayersAlreadyInTheBatch() {
+    this.scheduler.disableBulkUntil(0L);
+    List<UUID> due = this.enqueueMany(1);
+    UUID soon = UUID.randomUUID();
+    this.host.soon.addAll(List.of(soon, soon));
+    this.scheduler.tick(this.clock[0]);
+
+    assertEquals(List.of(due.get(0), soon), this.lookup.bulkRequests.get(0));
+  }
+
+  @Test
+  void failedTopUpIsNotSentAgainOnItsOwn() {
+    this.scheduler.disableBulkUntil(0L);
+    List<UUID> due = this.enqueueMany(1);
+    UUID soon = UUID.randomUUID();
+    this.host.soon.add(soon);
+    this.scheduler.tick(this.clock[0]);
+    assertEquals(List.of(due.get(0), soon), this.lookup.bulkRequests.get(0));
+
+    this.lookup.bulkCallbacks.get(0).accept(new BulkLookupResult(503, null, 0L, -1, -1L));
+    this.host.resolved.add(due.get(0));
+    this.advance(RateLimiter.MAX_BACKOFF_MS);
+    this.scheduler.tick(this.clock[0]);
+
+    assertEquals(1, this.lookup.bulkRequests.size());
+    assertEquals(0, this.scheduler.size());
   }
 
   @Test

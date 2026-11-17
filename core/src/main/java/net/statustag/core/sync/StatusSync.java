@@ -30,13 +30,14 @@ public final class StatusSync {
   static final long BACKOFF_MS = 60_000L;
   static final long MAX_BACKOFF_MS = 300_000L;
   static final long SEND_GAP_MS = 5_000L;
+  static final long REJECT_WINDOW_MS = 3_000L;
   static final long STATUS_SETTLE_MS = 2_000L;
   static final long RESYNC_DELAY_MS = 3_000L;
   static final long RESYNC_GAP_MS = 40_000L;
   static final long RESYNC_CARRIES_MS = 10_000L;
   static final long REPLY_BATCH_MS = 1_500L;
   static final long ANSWER_WINDOW_MS = 15_000L;
-  static final long HEARTBEAT_MS = 200_000L;
+  static final long HEARTBEAT_MS = 120_000L;
   static final long ANNOUNCE_MS = 600_000L;
   static final long PEER_TTL_MS = 360_000L;
   static final long REPLY_COOLDOWN_MS = 30_000L;
@@ -44,6 +45,12 @@ public final class StatusSync {
   static final int MAX_RECEIVERS = 256;
 
   private static final long NEVER = Long.MIN_VALUE / 2L;
+
+  private enum Sent {
+    TARGETED,
+    BROADCAST,
+    RESYNC
+  }
 
   private record Peer(long heardAt, long repliedAt) {
   }
@@ -68,6 +75,8 @@ public final class StatusSync {
   private volatile long repliesSince = NEVER;
   private volatile long pausedUntil = NEVER;
   private volatile long backoffMs = BACKOFF_MS;
+  private volatile long lastSendAt = NEVER;
+  private volatile Sent lastSent = Sent.TARGETED;
   private int ticks;
 
   public StatusSync(
@@ -85,12 +94,19 @@ public final class StatusSync {
   }
 
   public int peerCount() {
-    return this.peers.size();
+    int count = 0;
+    for (UUID peer : this.peers.keySet()) {
+      if (this.transport.inTabList(peer)) {
+        count++;
+      }
+    }
+    return count;
   }
 
   public void tick() {
     if (!this.settings.isSyncEnabled()) {
       this.pendingReplies.clear();
+      this.peers.clear();
       this.resyncPending = false;
       return;
     }
@@ -132,12 +148,27 @@ public final class StatusSync {
     boolean repeated = now - this.pausedUntil < BACKOFF_MS;
     this.backoffMs = repeated ? Math.min(this.backoffMs * 2L, MAX_BACKOFF_MS) : BACKOFF_MS;
     this.pausedUntil = now + this.backoffMs;
+    if (now - this.lastSendAt <= REJECT_WINDOW_MS) {
+      this.lastSendAt = NEVER;
+      switch (this.lastSent) {
+        case RESYNC -> {
+          this.resyncPending = true;
+          this.resyncDueAt = now;
+        }
+        case BROADCAST -> this.lastBroadcastAt = NEVER;
+        case TARGETED -> this.lastCoverAt = NEVER;
+      }
+    }
     if (this.debug.enabled()) {
       this.debug.log("sync rate limited by LabyConnect, pausing " + this.backoffMs / 1_000L + "s");
     }
   }
 
   private void sendNext(@NotNull StatusKind kind, long now) {
+    if (kind != this.lastBroadcastKind && now - this.observedAt < STATUS_SETTLE_MS) {
+      return;
+    }
+
     if (this.transport.hasAudience() && this.broadcastIfDue(kind, now)) {
       return;
     }
@@ -191,10 +222,12 @@ public final class StatusSync {
     }
 
     this.budget.record(now);
+    this.lastSendAt = now;
+    this.lastSent = resync ? Sent.RESYNC : Sent.BROADCAST;
     this.lastBroadcastKind = kind;
     this.lastBroadcastAt = now;
     this.lastCoverAt = now;
-    this.pendingReplies.clear();
+    this.pendingReplies.removeIf(this.transport::inTabList);
     if (resync) {
       this.lastResyncAt = now;
       synchronized (this) {
@@ -223,7 +256,7 @@ public final class StatusSync {
       Iterator<Map.Entry<UUID, Peer>> iterator = this.peers.entrySet().iterator();
       while (iterator.hasNext()) {
         Map.Entry<UUID, Peer> entry = iterator.next();
-        if (now - entry.getValue().heardAt() > PEER_TTL_MS) {
+        if (now - entry.getValue().heardAt() > PEER_TTL_MS || !this.transport.inTabList(entry.getKey())) {
           iterator.remove();
         } else if (receivers.size() < MAX_RECEIVERS) {
           receivers.add(entry.getKey());
@@ -250,6 +283,8 @@ public final class StatusSync {
     }
 
     this.budget.record(now);
+    this.lastSendAt = now;
+    this.lastSent = Sent.TARGETED;
     return true;
   }
 
@@ -282,7 +317,8 @@ public final class StatusSync {
 
     boolean asked = bool(object.get("r"));
     boolean answeringUs = now - this.lastBroadcastAt < ANSWER_WINDOW_MS;
-    if ((asked || newPeer && !answeringUs) && now - repliedAt >= REPLY_COOLDOWN_MS) {
+    boolean greeting = newPeer && !answeringUs && this.transport.inTabList(sender);
+    if ((asked || greeting) && now - repliedAt >= REPLY_COOLDOWN_MS) {
       if (this.pendingReplies.isEmpty()) {
         this.repliesSince = now;
       }

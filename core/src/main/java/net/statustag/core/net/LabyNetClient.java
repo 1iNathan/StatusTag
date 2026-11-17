@@ -166,9 +166,8 @@ public final class LabyNetClient implements StatusLookup {
   private static @NotNull RateInfo rateInfo(@NotNull Response<?> response, long now) {
     long retryAfterMs = 0L;
     WebRequestException exception = response.hasException() ? response.exception() : null;
-    if (exception != null && exception.getRetryAfter() > 0L) {
-      long retryAfter = exception.getRetryAfter();
-      retryAfterMs = retryAfter > 1_000L ? retryAfter : retryAfter * 1_000L;
+    if (exception != null) {
+      retryAfterMs = retryAfterMs(exception.getRetryAfter(), now);
     }
 
     int remaining = -1;
@@ -208,33 +207,24 @@ public final class LabyNetClient implements StatusLookup {
       return LookupResult.NETWORK_ERROR;
     }
 
-    if (exception.getResponseCode() > 0) {
-      return exception.getResponseCode();
-    }
-
-    return codeFromMessage(exception.getMessage());
+    return errorCode(exception.getResponseCode(), response.getStatusCode());
   }
 
-  static int codeFromMessage(@Nullable String message) {
-    if (message == null) {
-      return LookupResult.NETWORK_ERROR;
+  static int errorCode(int exceptionCode, int statusCode) {
+    if (exceptionCode > 0) {
+      return exceptionCode;
     }
-    if (message.contains("Too Many Requests") || message.contains(" 429")) {
-      return 429;
+    return statusCode >= 400 ? statusCode : LookupResult.NETWORK_ERROR;
+  }
+
+  static long retryAfterMs(long raw, long now) {
+    if (raw <= 0L) {
+      return 0L;
     }
-    if (message.contains("Forbidden") || message.contains(" 403")) {
-      return 403;
+    if (raw >= 100_000_000_000L) {
+      return Math.max(0L, raw - now);
     }
-    if (message.contains("Not Found") || message.contains(" 404")) {
-      return 404;
-    }
-    if (message.contains("Method Not Allowed") || message.contains(" 405")) {
-      return 405;
-    }
-    if (message.contains("Unauthorized") || message.contains(" 401")) {
-      return 401;
-    }
-    return LookupResult.NETWORK_ERROR;
+    return raw * 1_000L;
   }
 
   static @Nullable UUID parseUuid(@Nullable String value) {

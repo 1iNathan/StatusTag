@@ -66,11 +66,33 @@
           "name": "Freund geht offline"
         },
         "statusChange": {
-          "name": "Freund wird abwesend oder beschäftigt"
+          "name": "Freund ändert seinen Status",
+          "description": "Benachrichtigt dich, wenn ein Freund, der bereits online ist, zwischen Online, Abwesend und Beschäftigt wechselt."
         },
         "friendJoinedServer": {
           "name": "Freund betritt deinen Server",
           "description": "Benachrichtigt dich, wenn ein Freund den Server betritt, auf dem du gerade spielst."
+        },
+        "onlineMessage": {
+          "name": "Nachricht: kommt online",
+          "description": "Leer lassen für den Standardtext. {status} ist der neue Status, {previous} der vorherige. Farbcodes wie &8 funktionieren."
+        },
+        "offlineMessage": {
+          "name": "Nachricht: geht offline",
+          "description": "Leer lassen für den Standardtext. {status} ist der neue Status, {previous} der vorherige. Farbcodes wie &8 funktionieren."
+        },
+        "statusMessage": {
+          "name": "Nachricht: Statuswechsel",
+          "description": "Leer lassen für den Standardtext. {status} ist der neue Status, {previous} der vorherige. Farbcodes wie &8 funktionieren."
+        },
+        "joinedMessage": {
+          "name": "Nachricht: betritt deinen Server",
+          "description": "Leer lassen für den Standardtext. {status} ist der Status des Freundes. Farbcodes wie &8 funktionieren."
+        },
+        "header": {
+          "messages": {
+            "name": "Nachrichten"
+          }
         }
       },
       "showPlayersWithoutLabyMod": {
@@ -156,7 +178,8 @@
       "away": "ist jetzt abwesend",
       "busy": "ist jetzt beschäftigt",
       "offline": "ist offline gegangen",
-      "joinedServer": "hat deinen Server betreten"
+      "joinedServer": "hat deinen Server betreten",
+      "was": "(war %s)"
     },
     "status": {
       "online": "Online",
@@ -169,8 +192,8 @@
       "unknown": "Status noch unbekannt"
     },
     "command": {
-      "summary": "%s Spieler in der Tabliste, %s mit bekanntem Status, %s nutzen StatusTag, %s warten auf eine Abfrage",
-      "notFound": "%s ist nicht in der Tabliste.",
+      "summary": "%s Spieler in der Tab-Liste, %s mit bekanntem Status, %s nutzen StatusTag, %s warten auf eine Abfrage",
+      "notFound": "%s ist nicht in der Tab-Liste.",
       "source": {
         "self": "dein eigener Status",
         "friend": "LabyChat-Freund",

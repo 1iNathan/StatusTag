@@ -27,6 +27,8 @@ public final class StatusOverviewWidget extends TextHudWidget<TextHudWidgetConfi
   private int lastAway = -1;
   private int lastBusy = -1;
   private int lastOther = -1;
+  private int lastRevision = -1;
+  private boolean sample;
 
   public StatusOverviewWidget(@NotNull StatusService service) {
     super(ID);
@@ -49,7 +51,8 @@ public final class StatusOverviewWidget extends TextHudWidget<TextHudWidgetConfi
 
   @Override
   public void onTick(boolean isEditorContext) {
-    if (++this.ticks < UPDATE_TICKS) {
+    boolean leavingSample = this.sample && !isEditorContext;
+    if (++this.ticks < UPDATE_TICKS && !leavingSample) {
       return;
     }
     this.ticks = 0;
@@ -65,7 +68,9 @@ public final class StatusOverviewWidget extends TextHudWidget<TextHudWidgetConfi
     int away;
     int busy;
     int other;
-    if (editor && this.service.tabPlayerCount() == 0) {
+    boolean sample = editor && this.service.tabPlayerCount() == 0;
+    this.sample = sample;
+    if (sample) {
       online = SAMPLE[0];
       away = SAMPLE[1];
       busy = SAMPLE[2];
@@ -80,13 +85,16 @@ public final class StatusOverviewWidget extends TextHudWidget<TextHudWidgetConfi
           + counts[StatusKind.PROFILE_HIDDEN.ordinal()];
     }
 
-    if (online == this.lastOnline && away == this.lastAway && busy == this.lastBusy && other == this.lastOther) {
+    int revision = this.service.palette().revision();
+    if (online == this.lastOnline && away == this.lastAway && busy == this.lastBusy && other == this.lastOther
+        && revision == this.lastRevision) {
       return;
     }
     this.lastOnline = online;
     this.lastAway = away;
     this.lastBusy = busy;
     this.lastOther = other;
+    this.lastRevision = revision;
 
     StatusPalette palette = this.service.palette();
     Component value = Component.empty()

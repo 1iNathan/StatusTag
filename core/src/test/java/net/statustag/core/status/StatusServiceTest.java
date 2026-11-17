@@ -2,9 +2,11 @@ package net.statustag.core.status;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 import net.statustag.core.render.StatusPalette;
 import net.statustag.core.util.DebugLog;
@@ -23,6 +25,12 @@ class StatusServiceTest {
 
   @BeforeEach
   void setUp() {
+    this.store = new StatusStore(this.directory.resolve("cache.json"), this.directory.resolve("legacy.json"));
+    this.palette = new StatusPalette(kind -> null);
+    this.service = this.createService(this.store, true);
+  }
+
+  private StatusService createService(StatusStore store, boolean labyChat) {
     StatusSettings config = new StatusSettings() {
       @Override
       public boolean isActive() {
@@ -36,7 +44,7 @@ class StatusServiceTest {
 
       @Override
       public boolean isLabyChatEnabled() {
-        return true;
+        return labyChat;
       }
 
       @Override
@@ -49,16 +57,18 @@ class StatusServiceTest {
         return "blocked.example".equals(host);
       }
     };
-    this.store = new StatusStore(this.directory.resolve("cache.json"), this.directory.resolve("legacy.json"));
-    this.palette = new StatusPalette(kind -> null);
-    this.service = new StatusService(
+    return new StatusService(
         config,
-        this.store,
+        store,
         this.palette,
         new DebugLog(this.directory.resolve("debug.log"), Runnable::run),
         (uniqueId, jwt, callback) -> {
         }
     );
+  }
+
+  private static StatusEntry aged(StatusKind kind, StatusSource source, long now, long age) {
+    return new StatusEntry(kind, source, now - age, now - age);
   }
 
   @Test
@@ -150,10 +160,282 @@ class StatusServiceTest {
     this.service.onTabAdd(steve, "Steve");
     assertEquals(steve, this.service.findChatSender("[VIP] Steve: hi"));
     assertEquals(steve, this.service.findTabPlayer("STEVE"));
-    assertEquals(java.util.List.of("steve"), this.service.completeTabName("st"));
+    assertEquals(List.of("Steve"), this.service.completeTabName("st"));
+    assertEquals("Steve", this.service.tabName(steve));
 
     this.service.onTabRemove(steve, "Steve");
     assertEquals(null, this.service.findChatSender("[VIP] Steve: hi"));
+    assertEquals(null, this.service.tabName(steve));
+  }
+
+  @Test
+  void completesNamesWithTheirCapitalisationInOrder() {
+    this.service.onTabAdd(UUID.randomUUID(), "stone_Miner");
+    this.service.onTabAdd(UUID.randomUUID(), "Steve");
+    this.service.onTabAdd(UUID.randomUUID(), "Alex");
+
+    assertEquals(List.of("Steve", "stone_Miner"), this.service.completeTabName("ST"));
+  }
+
+  @Test
+  void recentlyUnlistedPlayerBecomesHiddenWithoutSecondLookup() {
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.applyUnlisted(id, System.currentTimeMillis());
+    assertEquals(StatusKind.NO_LABYMOD, this.service.kindOf(id));
+
+    this.service.onLabyModUser(id);
+    assertEquals(StatusKind.PROFILE_HIDDEN, this.service.kindOf(id));
+    assertEquals(StatusSource.API, this.store.get(id).source());
+    assertFalse(this.service.scheduler().isQueued(id));
+    assertFalse(this.service.needsLookup(id, System.currentTimeMillis()));
+  }
+
+  @Test
+  void labyModUserSeenBeforeUnlistedAnswerGetsHiddenProfile() {
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.onLabyModUser(id);
+    this.service.applyUnlisted(id, System.currentTimeMillis());
+
+    assertEquals(StatusKind.PROFILE_HIDDEN, this.service.kindOf(id));
+    assertFalse(this.service.needsLookup(id, System.currentTimeMillis()));
+  }
+
+  @Test
+  void oldUnlistedAnswerStillForcesRecheck() {
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.applyUnlisted(id, System.currentTimeMillis() - 3L * StatusPolicy.MINUTE_MS);
+
+    this.service.onLabyModUser(id);
+    assertEquals(StatusKind.NO_LABYMOD, this.service.kindOf(id));
+    assertTrue(this.service.needsLookup(id, System.currentTimeMillis()));
+    assertTrue(this.service.scheduler().isQueued(id));
+  }
+
+  @Test
+  void laterMissingAccountAnswerClearsTheUnlistedMark() {
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    long now = System.currentTimeMillis();
+    this.service.applyUnlisted(id, now);
+    this.service.applyLookup(id, StatusKind.NO_LABYMOD, now);
+
+    this.service.onLabyModUser(id);
+    assertEquals(StatusKind.NO_LABYMOD, this.service.kindOf(id));
+    assertTrue(this.service.needsLookup(id, System.currentTimeMillis()));
+  }
+
+  @Test
+  void dueSoonReturnsTabPlayersAboutToRefresh() {
+    long now = System.currentTimeMillis();
+    long refresh = StatusPolicy.refreshAfterMs(StatusKind.OFFLINE);
+    UUID soon = UUID.randomUUID();
+    UUID recent = UUID.randomUUID();
+    UUID offTab = UUID.randomUUID();
+    UUID friend = UUID.randomUUID();
+    UUID presence = UUID.randomUUID();
+    UUID self = UUID.randomUUID();
+    for (UUID id : List.of(soon, recent, friend, presence, self)) {
+      this.service.onTabAdd(id, null);
+    }
+    this.service.applySelf(self, StatusKind.ONLINE);
+    this.store.put(soon, aged(StatusKind.OFFLINE, StatusSource.API, now, refresh - 30_000L));
+    this.store.put(recent, aged(StatusKind.OFFLINE, StatusSource.API, now, refresh / 2L));
+    this.store.put(offTab, aged(StatusKind.OFFLINE, StatusSource.API, now, refresh - 30_000L));
+    this.store.put(friend, aged(StatusKind.OFFLINE, StatusSource.FRIEND, now, refresh - 30_000L));
+    this.store.put(presence, aged(StatusKind.ONLINE, StatusSource.API, now,
+        StatusPolicy.refreshAfterMs(StatusKind.ONLINE) - 30_000L));
+    this.store.put(self, aged(StatusKind.OFFLINE, StatusSource.API, now, refresh - 30_000L));
+
+    assertEquals(List.of(soon), this.service.dueSoon(now, 100));
+    assertEquals(List.of(), this.service.dueSoon(now, 0));
+
+    this.service.refreshSuppression("blocked.example");
+    assertEquals(List.of(), this.service.dueSoon(now, 100));
+  }
+
+  @Test
+  void dueSoonStopsAtTheLimit() {
+    long now = System.currentTimeMillis();
+    long age = StatusPolicy.refreshAfterMs(StatusKind.INVISIBLE) - 30_000L;
+    for (int i = 0; i < 3; i++) {
+      UUID id = UUID.randomUUID();
+      this.service.onTabAdd(id, null);
+      this.store.put(id, aged(StatusKind.INVISIBLE, StatusSource.CACHE, now, age));
+    }
+    assertEquals(2, this.service.dueSoon(now, 2).size());
+  }
+
+  @Test
+  void labyConnectLossKeepsFriendStatusUntilNormalRefresh() {
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.commit(id, StatusKind.BUSY, StatusSource.FRIEND);
+
+    this.service.onLabyConnectLost();
+    long now = System.currentTimeMillis();
+    assertEquals(StatusSource.CACHE, this.store.get(id).source());
+    assertEquals(StatusKind.BUSY, this.service.kindOf(id));
+    assertFalse(this.service.needsLookup(id, now));
+    assertTrue(this.service.needsLookup(id, now + StatusPolicy.refreshAfterMs(StatusKind.BUSY) + 1_000L));
+
+    this.service.commit(id, StatusKind.AWAY, StatusSource.FRIEND);
+    assertEquals(StatusSource.FRIEND, this.store.get(id).source());
+    assertEquals(StatusKind.AWAY, this.service.kindOf(id));
+  }
+
+  @Test
+  void lookupAfterLabyConnectLossIsStillApplied() {
+    UUID id = UUID.randomUUID();
+    this.service.commit(id, StatusKind.BUSY, StatusSource.FRIEND);
+    this.service.onLabyConnectLost();
+    this.service.applyLookup(id, StatusKind.OFFLINE, System.currentTimeMillis());
+
+    assertEquals(StatusKind.OFFLINE, this.service.kindOf(id));
+    assertEquals(StatusSource.API, this.store.get(id).source());
+  }
+
+  @Test
+  void ownStatusFollowsWithoutLabyChatSource() {
+    StatusService service = this.createService(this.store, false);
+    UUID id = UUID.randomUUID();
+    service.applySelf(id, StatusKind.BUSY);
+    assertEquals(StatusKind.BUSY, service.kindOf(id));
+    assertEquals(StatusSource.SELF, this.store.get(id).source());
+
+    service.demoteLive();
+    service.applySelf(id, StatusKind.ONLINE);
+    assertEquals(StatusKind.ONLINE, service.kindOf(id));
+    assertEquals(StatusSource.SELF, this.store.get(id).source());
+
+    service.onTabAdd(id, null);
+    assertFalse(service.needsLookup(id, System.currentTimeMillis()));
+  }
+
+  @Test
+  void accountSwitchDemotesLiveEntriesOfThePreviousAccount() {
+    UUID first = UUID.randomUUID();
+    UUID second = UUID.randomUUID();
+    UUID friend = UUID.randomUUID();
+    assertFalse(this.service.applySelf(first, StatusKind.ONLINE));
+    this.service.commit(friend, StatusKind.BUSY, StatusSource.FRIEND);
+
+    assertFalse(this.service.applySelf(first, StatusKind.AWAY));
+    assertEquals(StatusSource.FRIEND, this.store.get(friend).source());
+    assertEquals(StatusKind.AWAY, this.service.kindOf(first));
+
+    assertTrue(this.service.applySelf(second, StatusKind.ONLINE));
+    assertEquals(StatusSource.CACHE, this.store.get(friend).source());
+    assertEquals(StatusSource.CACHE, this.store.get(first).source());
+    assertEquals(StatusSource.SELF, this.store.get(second).source());
+
+    this.service.onTabAdd(friend, null);
+    this.service.onTabAdd(first, null);
+    long now = System.currentTimeMillis();
+    assertTrue(this.service.needsLookup(friend, now));
+    assertTrue(this.service.needsLookup(first, now));
+  }
+
+  @Test
+  void priorityTable() {
+    long now = System.currentTimeMillis();
+    for (StatusSource live : new StatusSource[] {StatusSource.FRIEND, StatusSource.SELF}) {
+      StatusEntry current = aged(StatusKind.BUSY, live, now, StatusPolicy.DAY_MS);
+      assertTrue(StatusService.outranks(current, StatusSource.SYNC, now));
+      assertTrue(StatusService.outranks(current, StatusSource.API, now));
+    }
+    for (StatusSource source : StatusSource.values()) {
+      StatusEntry current = aged(StatusKind.BUSY, source, now, 0L);
+      assertFalse(StatusService.outranks(current, StatusSource.FRIEND, now));
+      assertFalse(StatusService.outranks(current, StatusSource.SELF, now));
+    }
+
+    StatusEntry freshSync = aged(StatusKind.AWAY, StatusSource.SYNC, now, StatusPolicy.SYNC_FRESH_MS - 1L);
+    StatusEntry staleSync = aged(StatusKind.AWAY, StatusSource.SYNC, now, StatusPolicy.SYNC_FRESH_MS);
+    assertTrue(StatusService.outranks(freshSync, StatusSource.API, now));
+    assertFalse(StatusService.outranks(staleSync, StatusSource.API, now));
+    assertFalse(StatusService.outranks(freshSync, StatusSource.SYNC, now));
+
+    for (StatusSource stored : new StatusSource[] {StatusSource.API, StatusSource.CACHE}) {
+      StatusEntry current = aged(StatusKind.ONLINE, stored, now, 0L);
+      assertFalse(StatusService.outranks(current, StatusSource.API, now));
+      assertFalse(StatusService.outranks(current, StatusSource.SYNC, now));
+    }
+  }
+
+  @Test
+  void staleSyncYieldsToLookup() {
+    UUID kept = UUID.randomUUID();
+    UUID replaced = UUID.randomUUID();
+    long now = System.currentTimeMillis();
+    this.store.put(kept, aged(StatusKind.BUSY, StatusSource.SYNC, now, StatusPolicy.SYNC_FRESH_MS - 1_000L));
+    this.store.put(replaced, aged(StatusKind.BUSY, StatusSource.SYNC, now, StatusPolicy.SYNC_FRESH_MS));
+
+    this.service.applyLookup(kept, StatusKind.PROFILE_HIDDEN, now);
+    this.service.applyLookup(replaced, StatusKind.PROFILE_HIDDEN, now);
+    assertEquals(StatusKind.BUSY, this.service.kindOf(kept));
+    assertEquals(StatusSource.SYNC, this.store.get(kept).source());
+    assertEquals(StatusKind.PROFILE_HIDDEN, this.service.kindOf(replaced));
+    assertEquals(StatusSource.API, this.store.get(replaced).source());
+  }
+
+  @Test
+  void outrankedLookupOnlyRecordsTheCheck() {
+    UUID id = UUID.randomUUID();
+    this.service.commit(id, StatusKind.AWAY, StatusSource.SYNC);
+    StatusEntry before = this.store.get(id);
+    long checkedAt = before.updatedAt() + 1_000L;
+
+    this.service.applyLookup(id, StatusKind.ONLINE, checkedAt);
+    StatusEntry after = this.store.get(id);
+    assertEquals(StatusKind.AWAY, after.kind());
+    assertEquals(StatusSource.SYNC, after.source());
+    assertEquals(before.updatedAt(), after.updatedAt());
+    assertEquals(checkedAt, after.checkedAt());
+  }
+
+  @Test
+  void forgottenSyncStatusFallsBackToLookups() {
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.commit(id, StatusKind.BUSY, StatusSource.SYNC);
+    assertFalse(this.service.needsLookup(id, System.currentTimeMillis()));
+
+    this.service.forgetSynced();
+    assertEquals(StatusSource.CACHE, this.store.get(id).source());
+    assertTrue(this.service.needsLookup(id, System.currentTimeMillis()));
+
+    this.service.applyLookup(id, StatusKind.ONLINE, System.currentTimeMillis());
+    assertEquals(StatusKind.ONLINE, this.service.kindOf(id));
+  }
+
+  @Test
+  void demotedFriendFallsBackToLookups() {
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.commit(id, StatusKind.BUSY, StatusSource.FRIEND);
+    assertFalse(this.service.needsLookup(id, System.currentTimeMillis()));
+
+    this.service.demoteLive();
+    assertEquals(StatusSource.CACHE, this.store.get(id).source());
+    assertEquals(0L, this.store.get(id).checkedAt());
+    assertTrue(this.service.needsLookup(id, System.currentTimeMillis()));
+
+    this.service.applyLookup(id, StatusKind.OFFLINE, System.currentTimeMillis());
+    assertEquals(StatusKind.OFFLINE, this.service.kindOf(id));
+    assertEquals(StatusSource.API, this.store.get(id).source());
+  }
+
+  @Test
+  void unchangedLiveStatusKeepsTheEntry() {
+    UUID id = UUID.randomUUID();
+    this.service.commit(id, StatusKind.BUSY, StatusSource.FRIEND);
+    StatusEntry before = this.store.get(id);
+
+    this.service.commit(id, StatusKind.BUSY, StatusSource.FRIEND);
+    assertSame(before, this.store.get(id));
   }
 
   @Test

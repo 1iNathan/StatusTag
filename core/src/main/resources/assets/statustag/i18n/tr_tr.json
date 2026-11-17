@@ -66,11 +66,33 @@
           "name": "Arkadaş çevrimdışı olunca"
         },
         "statusChange": {
-          "name": "Arkadaş uzakta veya meşgul olunca"
+          "name": "Arkadaş durumunu değiştirince",
+          "description": "Zaten çevrimiçi olan bir arkadaşın Çevrimiçi, Uzakta ve Meşgul arasında geçiş yaptığında seni bilgilendirir."
         },
         "friendJoinedServer": {
           "name": "Arkadaşın sunucuna katıldı",
           "description": "Bir arkadaşın oynadığın sunucuya katıldığında seni bilgilendirir."
+        },
+        "onlineMessage": {
+          "name": "Mesaj: çevrimiçi olunca",
+          "description": "Varsayılan metin için boş bırak. {status} yeni durum, {previous} önceki durumdur. &8 gibi renk kodları çalışır."
+        },
+        "offlineMessage": {
+          "name": "Mesaj: çevrimdışı olunca",
+          "description": "Varsayılan metin için boş bırak. {status} yeni durum, {previous} önceki durumdur. &8 gibi renk kodları çalışır."
+        },
+        "statusMessage": {
+          "name": "Mesaj: durum değişince",
+          "description": "Varsayılan metin için boş bırak. {status} yeni durum, {previous} önceki durumdur. &8 gibi renk kodları çalışır."
+        },
+        "joinedMessage": {
+          "name": "Mesaj: sunucuna girince",
+          "description": "Varsayılan metin için boş bırak. {status} arkadaşın durumudur. &8 gibi renk kodları çalışır."
+        },
+        "header": {
+          "messages": {
+            "name": "Mesajlar"
+          }
         }
       },
       "showPlayersWithoutLabyMod": {
@@ -156,7 +178,8 @@
       "away": "şimdi uzakta",
       "busy": "şimdi meşgul",
       "offline": "çevrimdışı oldu",
-      "joinedServer": "sunucuna katıldı"
+      "joinedServer": "sunucuna katıldı",
+      "was": "(önceden: %s)"
     },
     "status": {
       "online": "Çevrimiçi",

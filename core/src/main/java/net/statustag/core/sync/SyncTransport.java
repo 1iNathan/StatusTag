@@ -14,6 +14,8 @@ public interface SyncTransport {
 
   boolean hasAudience();
 
+  boolean inTabList(@NotNull UUID uniqueId);
+
   boolean broadcast(@NotNull String key, @NotNull JsonObject payload);
 
   boolean send(@NotNull String key, @NotNull UUID[] receivers, @NotNull JsonObject payload);

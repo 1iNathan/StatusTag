@@ -18,14 +18,19 @@ final class SendBudget {
   }
 
   synchronized boolean allows(long now) {
-    while (!this.sentAt.isEmpty() && now - this.sentAt.peekFirst() >= this.windowMs) {
-      this.sentAt.pollFirst();
-    }
+    this.prune(now);
     return this.sentAt.size() < this.limit && now - this.lastAt >= this.minGapMs;
   }
 
   synchronized void record(long now) {
+    this.prune(now);
     this.sentAt.addLast(now);
     this.lastAt = now;
+  }
+
+  private void prune(long now) {
+    while (!this.sentAt.isEmpty() && now - this.sentAt.peekFirst() >= this.windowMs) {
+      this.sentAt.pollFirst();
+    }
   }
 }

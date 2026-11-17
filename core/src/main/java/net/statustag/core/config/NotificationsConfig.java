@@ -1,11 +1,13 @@
 package net.statustag.core.config;
 
 import net.labymod.api.client.gui.screen.widget.widgets.input.SwitchWidget.SwitchSetting;
+import net.labymod.api.client.gui.screen.widget.widgets.input.TextFieldWidget.TextFieldSetting;
 import net.labymod.api.configuration.loader.Config;
 import net.labymod.api.configuration.loader.annotation.IntroducedIn;
 import net.labymod.api.configuration.loader.annotation.ShowSettingInParent;
 import net.labymod.api.configuration.loader.property.ConfigProperty;
 import net.labymod.api.configuration.settings.annotation.SettingRequires;
+import net.labymod.api.configuration.settings.annotation.SettingSection;
 import net.statustag.core.StatusTagAddon;
 
 @SettingRequires("enabled")
@@ -36,6 +38,23 @@ public class NotificationsConfig extends Config {
   @SwitchSetting
   private final ConfigProperty<Boolean> friendJoinedServer = new ConfigProperty<>(true);
 
+  @IntroducedIn(namespace = StatusTagAddon.NAMESPACE, value = "1.1.2")
+  @SettingSection("messages")
+  @TextFieldSetting(maxLength = 120)
+  private final ConfigProperty<String> onlineMessage = new ConfigProperty<>("");
+
+  @IntroducedIn(namespace = StatusTagAddon.NAMESPACE, value = "1.1.2")
+  @TextFieldSetting(maxLength = 120)
+  private final ConfigProperty<String> offlineMessage = new ConfigProperty<>("");
+
+  @IntroducedIn(namespace = StatusTagAddon.NAMESPACE, value = "1.1.2")
+  @TextFieldSetting(maxLength = 120)
+  private final ConfigProperty<String> statusMessage = new ConfigProperty<>("");
+
+  @IntroducedIn(namespace = StatusTagAddon.NAMESPACE, value = "1.1.2")
+  @TextFieldSetting(maxLength = 120)
+  private final ConfigProperty<String> joinedMessage = new ConfigProperty<>("");
+
   public ConfigProperty<Boolean> enabled() {
     return this.enabled;
   }
@@ -62,5 +81,21 @@ public class NotificationsConfig extends Config {
 
   public ConfigProperty<Boolean> statusChange() {
     return this.statusChange;
+  }
+
+  public ConfigProperty<String> onlineMessage() {
+    return this.onlineMessage;
+  }
+
+  public ConfigProperty<String> offlineMessage() {
+    return this.offlineMessage;
+  }
+
+  public ConfigProperty<String> statusMessage() {
+    return this.statusMessage;
+  }
+
+  public ConfigProperty<String> joinedMessage() {
+    return this.joinedMessage;
   }
 }

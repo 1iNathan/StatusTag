@@ -28,19 +28,17 @@ public final class ConfigMigration {
     }
 
     Class<?> type = event.getConfigClass();
-    boolean changed = false;
     if (type == StatusColorsConfig.class) {
-      changed = migrate(root);
+      migrate(root);
     } else if (type == StatusTagConfiguration.class) {
-      changed = keepPreviousBehavior(root);
-      if (root.get("statusColors") instanceof JsonObject colors && migrate(colors)) {
-        changed = true;
+      keepPreviousBehavior(root);
+      if (root.get("statusColors") instanceof JsonObject colors) {
+        migrate(colors);
       }
+    } else {
+      return;
     }
-
-    if (changed) {
-      event.setJsonObject(root);
-    }
+    event.setJsonObject(root);
   }
 
   public static boolean migrate(@NotNull JsonObject colors) {

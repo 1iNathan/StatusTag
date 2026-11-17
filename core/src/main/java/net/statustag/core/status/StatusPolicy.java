@@ -9,7 +9,7 @@ public final class StatusPolicy {
   public static final long MINUTE_MS = 60_000L;
   public static final long HOUR_MS = 60L * MINUTE_MS;
   public static final long DAY_MS = 24L * HOUR_MS;
-  public static final long SYNC_FRESH_MS = 4L * MINUTE_MS;
+  public static final long SYNC_FRESH_MS = 8L * MINUTE_MS;
   public static final long MAX_CACHE_AGE_MS = 30L * DAY_MS;
 
   private StatusPolicy() {
@@ -34,6 +34,15 @@ public final class StatusPolicy {
       case SYNC -> now - entry.updatedAt() >= SYNC_FRESH_MS;
       case API, CACHE -> entry.checkedAt() <= 0L || now - entry.checkedAt() >= refreshAfterMs(entry.kind());
     };
+  }
+
+  static boolean refreshesWithin(@Nullable StatusEntry entry, long now, long aheadMs) {
+    return entry != null
+        && (entry.source() == StatusSource.API || entry.source() == StatusSource.CACHE)
+        && !entry.kind().isLabyPresence()
+        && entry.checkedAt() > 0L
+        && !needsFetch(entry, now)
+        && needsFetch(entry, now + aheadMs);
   }
 
   public static boolean isLookupCandidate(@NotNull UUID uniqueId) {

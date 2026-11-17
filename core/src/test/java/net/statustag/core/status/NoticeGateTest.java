@@ -5,17 +5,19 @@ import static net.statustag.core.status.StatusKind.OFFLINE;
 import static net.statustag.core.status.StatusKind.ONLINE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.UUID;
 import net.statustag.core.status.NoticeGate.Outcome;
 import net.statustag.core.status.NoticeGate.Toggles;
+import net.statustag.core.status.PresenceSettler.Change;
 import org.junit.jupiter.api.Test;
 
 class NoticeGateTest {
 
-  private static final UUID FRIEND = UUID.fromString("1de7e8da-e0c2-4550-8678-6d3d3a4bd670");
-  private static final String NAME = "Kallecrafter";
+  private static final UUID FRIEND = UUID.randomUUID();
+  private static final String NAME = "Steve";
   private static final Toggles ALL = new Toggles(true, true, true);
 
   private final NoticeGate gate = new NoticeGate();
@@ -76,7 +78,7 @@ class NoticeGateTest {
 
   @Test
   void otherNoticeAtTheFinalChangeWins() {
-    this.gate.foreignNotice("kallecrafter", 10_000);
+    this.gate.foreignNotice("steve", 10_000);
     assertEquals(Outcome.FOREIGN, this.decide(OFFLINE, ONLINE, 9_000, 10_500));
   }
 
@@ -90,6 +92,56 @@ class NoticeGateTest {
   void messageSecondsAfterComingOnlineDoesNotHideIt() {
     this.gate.foreignNotice(NAME, 2_000);
     assertEquals(Outcome.PUSH, this.decide(OFFLINE, ONLINE, 0, 0));
+  }
+
+  @Test
+  void labyModOnlineNoticeHidesComingOnline() {
+    this.gate.nativeNotice("steve", true, 3_000);
+    assertEquals(Outcome.FOREIGN, this.decide(OFFLINE, ONLINE, 0, 0));
+  }
+
+  @Test
+  void labyModOfflineNoticeHidesGoingOffline() {
+    this.gate.nativeNotice(NAME, false, 3_000);
+    assertEquals(Outcome.FOREIGN, this.decide(ONLINE, OFFLINE, 0, 0));
+  }
+
+  @Test
+  void labyModNoticeOnlyHidesItsOwnDirection() {
+    this.gate.nativeNotice(NAME, true, 3_000);
+    assertEquals(Outcome.PUSH, this.decide(ONLINE, OFFLINE, 0, 0));
+
+    NoticeGate other = new NoticeGate();
+    other.nativeNotice(NAME, false, 3_000);
+    assertEquals(Outcome.PUSH, other.decide(burst(OFFLINE, ONLINE, 0, 0), NAME, ALL));
+  }
+
+  @Test
+  void labyModNoticeBeforeTheBurstDoesNotCount() {
+    this.gate.nativeNotice(NAME, true, 999);
+    assertEquals(Outcome.PUSH, this.decide(OFFLINE, ONLINE, 1_000, 1_000));
+  }
+
+  @Test
+  void labyModNoticeDoesNotTouchStatusChanges() {
+    this.gate.nativeNotice(NAME, true, 3_000);
+    this.gate.nativeNotice(NAME, false, 3_000);
+    assertEquals(Outcome.PUSH, this.decide(ONLINE, AWAY, 0, 0));
+  }
+
+  @Test
+  void labyModNoticeOffsetIsMeasuredFromTheBurstStart() {
+    this.gate.nativeNotice(NAME, true, 4_000);
+    assertEquals(3_000L, this.gate.nativeOffset(NAME, Change.CAME_ONLINE, 1_000));
+    assertNull(this.gate.nativeOffset(NAME, Change.WENT_OFFLINE, 1_000));
+    assertNull(this.gate.nativeOffset(NAME, Change.STATUS, 1_000));
+  }
+
+  @Test
+  void oldLabyModNoticesAreForgotten() {
+    this.gate.nativeNotice(NAME, true, 0);
+    this.gate.nativeNotice("someone", false, NoticeGate.FORGET_AFTER_MS);
+    assertNull(this.gate.nativeOffset(NAME, Change.CAME_ONLINE, 0));
   }
 
   @Test
