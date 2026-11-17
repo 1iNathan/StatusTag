@@ -28,6 +28,7 @@ import net.labymod.api.notification.Notification;
 import net.labymod.api.user.GameUser;
 import net.statustag.core.status.StatusService;
 import net.statustag.core.sync.StatusSync;
+import net.statustag.core.util.LabyModUsers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,7 +86,12 @@ public final class StatusListener {
 
   @Subscribe
   public void onUserDiscover(UserDiscoverEvent event) {
-    this.registerGameUser(event.gameUser());
+    GameUser gameUser = event.gameUser();
+    if (gameUser != null && event.isWhitelisted()) {
+      this.service.onLabyModUser(gameUser.getUniqueId());
+    } else {
+      this.registerGameUser(gameUser);
+    }
   }
 
   @Subscribe
@@ -173,7 +179,7 @@ public final class StatusListener {
   }
 
   private void registerGameUser(@Nullable GameUser gameUser) {
-    if (gameUser != null && gameUser.isUsingLabyMod()) {
+    if (gameUser != null && LabyModUsers.hasAccount(gameUser)) {
       this.service.onLabyModUser(gameUser.getUniqueId());
     }
   }

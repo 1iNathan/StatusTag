@@ -8,7 +8,7 @@ plugins {
 val versions = providers.gradleProperty("net.labymod.minecraft-versions").get().split(";")
 
 group = "net.statustag"
-version = providers.environmentVariable("VERSION").getOrElse("1.1.2")
+version = providers.environmentVariable("VERSION").getOrElse("1.1.3")
 
 labyMod {
     defaultPackageName = "net.statustag"

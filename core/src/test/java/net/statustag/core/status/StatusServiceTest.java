@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import net.statustag.core.render.StatusPalette;
 import net.statustag.core.util.DebugLog;
@@ -249,7 +250,7 @@ class StatusServiceTest {
         StatusPolicy.refreshAfterMs(StatusKind.ONLINE) - 30_000L));
     this.store.put(self, aged(StatusKind.OFFLINE, StatusSource.API, now, refresh - 30_000L));
 
-    assertEquals(List.of(soon), this.service.dueSoon(now, 100));
+    assertEquals(Set.of(soon, presence), Set.copyOf(this.service.dueSoon(now, 100)));
     assertEquals(List.of(), this.service.dueSoon(now, 0));
 
     this.service.refreshSuppression("blocked.example");
@@ -394,6 +395,57 @@ class StatusServiceTest {
     assertEquals(StatusSource.SYNC, after.source());
     assertEquals(before.updatedAt(), after.updatedAt());
     assertEquals(checkedAt, after.checkedAt());
+  }
+
+  @Test
+  void offlineAnswerDoesNotReplaceARecentlySeenStatus() {
+    long now = System.currentTimeMillis();
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.applyLookup(id, StatusKind.AWAY, now);
+
+    this.service.applyLookup(id, StatusKind.INVISIBLE, now + 120_000L);
+    assertEquals(StatusKind.AWAY, this.service.kindOf(id));
+    assertEquals(now + 120_000L, this.store.get(id).checkedAt());
+    assertEquals(now, this.store.get(id).updatedAt());
+
+    this.service.applyLookup(id, StatusKind.ONLINE, now + 240_000L);
+    assertEquals(StatusKind.ONLINE, this.service.kindOf(id));
+
+    long late = now + 240_000L + StatusPolicy.PRESENCE_HOLD_MS;
+    this.service.applyLookup(id, StatusKind.INVISIBLE, late - 1L);
+    assertEquals(StatusKind.ONLINE, this.service.kindOf(id));
+    this.service.applyLookup(id, StatusKind.INVISIBLE, late);
+    assertEquals(StatusKind.INVISIBLE, this.service.kindOf(id));
+  }
+
+  @Test
+  void hiddenProfileAnswerStillReplacesASeenStatus() {
+    long now = System.currentTimeMillis();
+    UUID id = UUID.randomUUID();
+    this.service.onTabAdd(id, null);
+    this.service.applyLookup(id, StatusKind.ONLINE, now);
+    this.service.applyLookup(id, StatusKind.PROFILE_HIDDEN, now + 120_000L);
+    assertEquals(StatusKind.PROFILE_HIDDEN, this.service.kindOf(id));
+  }
+
+  @Test
+  void playersKnownWithAStatusStayLabyModUsers() {
+    long now = System.currentTimeMillis();
+    UUID hidden = UUID.randomUUID();
+    UUID busy = UUID.randomUUID();
+    UUID none = UUID.randomUUID();
+    UUID invisible = UUID.randomUUID();
+    this.store.put(hidden, aged(StatusKind.PROFILE_HIDDEN, StatusSource.CACHE, now, 60_000L));
+    this.store.put(busy, aged(StatusKind.BUSY, StatusSource.SYNC, now, 60_000L));
+    this.store.put(none, aged(StatusKind.NO_LABYMOD, StatusSource.API, now, 60_000L));
+    this.store.put(invisible, aged(StatusKind.INVISIBLE, StatusSource.API, now, 60_000L));
+
+    assertTrue(this.service.isKnownLabyModUser(hidden));
+    assertTrue(this.service.isKnownLabyModUser(busy));
+    assertFalse(this.service.isKnownLabyModUser(none));
+    assertFalse(this.service.isKnownLabyModUser(invisible));
+    assertFalse(this.service.isKnownLabyModUser(UUID.randomUUID()));
   }
 
   @Test

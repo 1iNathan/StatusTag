@@ -74,7 +74,8 @@ class StatusPolicyTest {
     long ahead = StatusPolicy.MINUTE_MS;
     long refresh = StatusPolicy.refreshAfterMs(StatusKind.OFFLINE);
     assertTrue(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.API, refresh - 59_000L), NOW, ahead));
-    assertTrue(StatusPolicy.refreshesWithin(entry(StatusKind.INVISIBLE, StatusSource.CACHE, refresh - 59_000L), NOW, ahead));
+    assertTrue(StatusPolicy.refreshesWithin(
+        entry(StatusKind.INVISIBLE, StatusSource.CACHE, StatusPolicy.refreshAfterMs(StatusKind.INVISIBLE) - 59_000L), NOW, ahead));
     assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.API, refresh - 61_000L), NOW, ahead));
     assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.API, refresh), NOW, ahead));
     assertFalse(StatusPolicy.refreshesWithin(new StatusEntry(StatusKind.OFFLINE, StatusSource.CACHE, NOW, 0L), NOW, ahead));
@@ -82,7 +83,7 @@ class StatusPolicyTest {
   }
 
   @Test
-  void refreshesWithinIgnoresLiveSyncAndPresence() {
+  void refreshesWithinIgnoresLiveAndSyncButCoversPresence() {
     long ahead = StatusPolicy.MINUTE_MS;
     assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.OFFLINE, StatusSource.FRIEND, StatusPolicy.DAY_MS), NOW, ahead));
     assertFalse(StatusPolicy.refreshesWithin(entry(StatusKind.BUSY, StatusSource.SELF, StatusPolicy.DAY_MS), NOW, ahead));
@@ -90,8 +91,24 @@ class StatusPolicyTest {
         entry(StatusKind.AWAY, StatusSource.SYNC, StatusPolicy.SYNC_FRESH_MS - 30_000L), NOW, ahead));
     for (StatusKind kind : new StatusKind[] {StatusKind.ONLINE, StatusKind.AWAY, StatusKind.BUSY}) {
       long refresh = StatusPolicy.refreshAfterMs(kind);
-      assertFalse(StatusPolicy.refreshesWithin(entry(kind, StatusSource.API, refresh - 30_000L), NOW, ahead));
+      assertTrue(StatusPolicy.refreshesWithin(entry(kind, StatusSource.API, refresh - 30_000L), NOW, ahead));
     }
+  }
+
+  @Test
+  void seenPresenceIsHeldAgainstAnOfflineAnswer() {
+    long hold = StatusPolicy.PRESENCE_HOLD_MS;
+    assertTrue(StatusPolicy.holdsPresence(entry(StatusKind.ONLINE, StatusSource.API, 60_000L), StatusKind.INVISIBLE, NOW));
+    assertTrue(StatusPolicy.holdsPresence(entry(StatusKind.AWAY, StatusSource.CACHE, hold - 1L), StatusKind.INVISIBLE, NOW));
+    assertFalse(StatusPolicy.holdsPresence(entry(StatusKind.BUSY, StatusSource.API, hold), StatusKind.INVISIBLE, NOW));
+    assertFalse(StatusPolicy.holdsPresence(entry(StatusKind.ONLINE, StatusSource.API, 60_000L), StatusKind.AWAY, NOW));
+    assertFalse(StatusPolicy.holdsPresence(entry(StatusKind.ONLINE, StatusSource.API, 60_000L), StatusKind.PROFILE_HIDDEN, NOW));
+    assertFalse(StatusPolicy.holdsPresence(entry(StatusKind.ONLINE, StatusSource.API, 60_000L), StatusKind.OFFLINE, NOW));
+    assertFalse(StatusPolicy.holdsPresence(entry(StatusKind.INVISIBLE, StatusSource.API, 60_000L), StatusKind.INVISIBLE, NOW));
+    assertFalse(StatusPolicy.holdsPresence(entry(StatusKind.ONLINE, StatusSource.SYNC, 60_000L), StatusKind.INVISIBLE, NOW));
+    assertFalse(StatusPolicy.holdsPresence(null, StatusKind.INVISIBLE, NOW));
+    assertTrue(StatusPolicy.refreshAfterMs(StatusKind.INVISIBLE) <= 2L * StatusPolicy.MINUTE_MS);
+    assertTrue(StatusPolicy.refreshAfterMs(StatusKind.ONLINE) <= 2L * StatusPolicy.MINUTE_MS);
   }
 
   @Test

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.3
+
+More colored dots, fewer wrong gray ones.
+
+- laby.net often answers Offline for players who are online and shows their real status only now and then. A status seen on laby.net is now kept for up to an hour while the player stays in the tab list instead of turning gray at the next check.
+- Players in the tab list are re-checked every 2 minutes instead of every 6 to 10, in combined requests, so a status is caught while laby.net shows it.
+- Players with a LabyMod account are also recognised from LabyMod's own account list. Players who hide their status keep their gray dot even when LabyChat sends no player data, for example right after Clear Cache.
+- Players already known with a status or a hidden profile are no longer shown as having no LabyMod account when laby.net leaves them out.
+
 ## 1.1.2
 
 Smoother statuses, no duplicate notifications and fewer laby.net requests.

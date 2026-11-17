@@ -37,7 +37,7 @@ Every color is customizable, including chroma.
 
 1. **LabyChat friends** – live, straight from your LabyChat connection.
 2. **StatusTag Sync** – players who use this addon share their own status with everyone in the tab list over LabyChat. Replies go only to the player who asked, so even full servers stay quiet.
-3. **laby.net** – up to 100 players per request, players you can see first, paced by laby.net's rate-limit headers and refreshed every few minutes while the player is in the tab list. Statuses that players hide on laby.net stay hidden.
+3. **laby.net** – up to 100 players per request, players you can see first, paced by laby.net's rate-limit headers and re-checked every 2 minutes while the player is in the tab list. Because laby.net often answers Offline for players who are online, a status seen there is kept for up to an hour while the player stays in the tab list. Statuses that players hide on laby.net stay hidden.
 
 Each source can be turned off under Status Sources.
 

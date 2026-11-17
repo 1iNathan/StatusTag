@@ -30,6 +30,7 @@ import net.statustag.core.util.Async;
 import net.statustag.core.util.CurrentServer;
 import net.statustag.core.util.DebugLog;
 import net.statustag.core.util.LabyConnectAccess;
+import net.statustag.core.util.LabyModUsers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -105,6 +106,9 @@ public final class StatusService implements FetchHost {
       previous[0] = current;
       if (current != null && outranks(current, source, now)) {
         return source == StatusSource.API ? current.withCheckedAt(now) : current;
+      }
+      if (source == StatusSource.API && StatusPolicy.holdsPresence(current, kind, now)) {
+        return current.withCheckedAt(now);
       }
       if (current != null && source.isLive() && current.source() == source && current.kind() == kind) {
         return current;
@@ -200,7 +204,12 @@ public final class StatusService implements FetchHost {
 
   @Override
   public boolean isKnownLabyModUser(@NotNull UUID uniqueId) {
-    return this.labyModUsers.contains(uniqueId);
+    if (this.labyModUsers.contains(uniqueId)) {
+      return true;
+    }
+
+    StatusEntry entry = this.store.get(uniqueId);
+    return entry != null && (entry.kind().isLabyPresence() || entry.kind() == StatusKind.PROFILE_HIDDEN);
   }
 
   @Override
@@ -345,7 +354,7 @@ public final class StatusService implements FetchHost {
     }
 
     for (GameUser gameUser : Laby.references().gameUserService().getGameUsers().values()) {
-      if (gameUser != null && gameUser.isUsingLabyMod()) {
+      if (LabyModUsers.hasAccount(gameUser)) {
         this.onLabyModUser(gameUser.getUniqueId());
       }
     }

@@ -10,6 +10,7 @@ public final class StatusPolicy {
   public static final long HOUR_MS = 60L * MINUTE_MS;
   public static final long DAY_MS = 24L * HOUR_MS;
   public static final long SYNC_FRESH_MS = 8L * MINUTE_MS;
+  public static final long PRESENCE_HOLD_MS = HOUR_MS;
   public static final long MAX_CACHE_AGE_MS = 30L * DAY_MS;
 
   private StatusPolicy() {
@@ -17,8 +18,8 @@ public final class StatusPolicy {
 
   public static long refreshAfterMs(@NotNull StatusKind kind) {
     return switch (kind) {
-      case ONLINE, AWAY, BUSY -> 6L * MINUTE_MS;
-      case OFFLINE, INVISIBLE -> 10L * MINUTE_MS;
+      case ONLINE, AWAY, BUSY, INVISIBLE -> 2L * MINUTE_MS;
+      case OFFLINE -> 10L * MINUTE_MS;
       case PROFILE_HIDDEN, NO_LABYMOD -> DAY_MS;
       case UNKNOWN -> 2L * MINUTE_MS;
     };
@@ -36,10 +37,17 @@ public final class StatusPolicy {
     };
   }
 
+  public static boolean holdsPresence(@Nullable StatusEntry current, @NotNull StatusKind incoming, long now) {
+    return current != null
+        && incoming == StatusKind.INVISIBLE
+        && (current.source() == StatusSource.API || current.source() == StatusSource.CACHE)
+        && current.kind().isLabyPresence()
+        && now - current.updatedAt() < PRESENCE_HOLD_MS;
+  }
+
   static boolean refreshesWithin(@Nullable StatusEntry entry, long now, long aheadMs) {
     return entry != null
         && (entry.source() == StatusSource.API || entry.source() == StatusSource.CACHE)
-        && !entry.kind().isLabyPresence()
         && entry.checkedAt() > 0L
         && !needsFetch(entry, now)
         && needsFetch(entry, now + aheadMs);
